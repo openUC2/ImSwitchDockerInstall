@@ -1,4 +1,5 @@
 
+Run as sudo (e.g. `sudo -s`)
 ```bash
 cd ~/Downloads
 git clone https://github.com/openUC2/ImSwitchDockerInstall
