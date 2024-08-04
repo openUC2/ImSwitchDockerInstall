@@ -1,0 +1,59 @@
+# Use an appropriate base image for Jetson Nano
+# sudo docker build -t imswitch_daheng .
+# docker run -it --rm --privileged imswitch_daheng
+FROM ubuntu:22.04
+
+ARG TARGETPLATFORM
+ENV TZ=America/Los_Angeles
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set timezone to avoid interactive prompt
+RUN ln -fs /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
+
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    python3 \
+    python3-pip \
+    usbutils \
+    sudo \
+    nano \
+    git \
+    expect
+
+# Create the udev rules directory
+RUN mkdir -p /etc/udev/rules.d
+
+# Download and install the appropriate Hik driver based on architecture
+RUN cd /tmp && \
+    wget https://dahengimaging.com/downloads/Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz && \
+    wget https://dahengimaging.com/downloads/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip && \
+    unzip Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip && \
+    tar -zxvf Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz && \
+    cd Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202 && \
+    chmod +x Galaxy_camera.run && \
+    cd /tmp/Galaxy_Linux_Python_2.0.2106.9041/api && \
+    python3 setup.py build && \
+    python3 setup.py install
+
+# Run the installer script using expect to automate Enter key presses
+RUN echo "Y En Y" | /tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202/Galaxy_camera.run
+
+# Copy libgxiapi.so to /usr/lib and set the library path
+#RUN cp /usr/lib/libgxiapi.so /usr/lib && \
+#    cp /tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202/libgxiapi.so /usr/lib && \
+#    ldconfig
+
+# Ensure the library path is set
+ENV LD_LIBRARY_PATH="/usr/lib:/tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202:$LD_LIBRARY_PATH"
+
+RUN pip install pillow numpy
+
+# Source the bashrc file
+RUN echo "source ~/.bashrc" >> ~/.bashrc
+RUN /bin/bash -c "source ~/.bashrc"
+
+CMD /bin/bash
+#  sudo python3 /tmp/Galaxy_Linux_Python_2.0.2106.9041/sample/GxSingleCamMono/GxSingleCamMono.py
