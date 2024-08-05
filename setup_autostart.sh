@@ -3,13 +3,73 @@
 # Define variables
 START_SCRIPT_PATH="$HOME/start_imswitch.sh"
 SERVICE_FILE_PATH="/etc/systemd/system/start_imswitch.service"
+PYTHON_SCRIPT_PATH="$HOME/detect_drive.py"
+
+# Create the Python script to detect external drives
+cat << 'EOF' > $PYTHON_SCRIPT_PATH
+import platform
+import subprocess
+
+def detect_external_drives():
+    system = platform.system()
+
+    external_drives = []
+
+    if system == "Linux" or system == "Darwin":  # Darwin is the system name for macOS
+        # Run 'df' command to get disk usage and filter only mounted devices
+        df_result = subprocess.run(['df', '-h'], stdout=subprocess.PIPE)
+        output = df_result.stdout.decode('utf-8')
+
+        # Split the output by lines
+        lines = output.splitlines()
+
+        # Iterate through each line
+        for line in lines:
+            # Check if the line contains '/media' or '/Volumes' (common mount points for external drives)
+            if '/media/' in line or '/Volumes/' in line:
+                # Split the line by spaces and get the mount point
+                drive_info = line.split()
+                mount_point = " ".join(drive_info[5:])  # Assuming the mount point is at index 5
+                # Filter out mount points that contain 'System' for macOS
+                if system == "Darwin" and "System" in mount_point:
+                    continue
+                external_drives.append(mount_point)
+    elif system == "Windows":
+        # Run 'wmic logicaldisk get caption,description' to get logical disks
+        wmic_result = subprocess.run(['wmic', 'logicaldisk', 'get', 'caption,description'], stdout=subprocess.PIPE)
+        output = wmic_result.stdout.decode('utf-8')
+
+        # Split the output by lines
+        lines = output.splitlines()
+
+        # Iterate through each line
+        for line in lines:
+            # Check if the line contains 'Removable Disk' (common description for external drives)
+            if 'Removable Disk' in line:
+                # Split the line by spaces and get the drive letter
+                drive_info = line.split()
+                drive_letter = drive_info[0]  # Drive letter is the first column
+                external_drives.append(drive_letter)
+
+    return external_drives
+
+if __name__ == "__main__":
+    drives = detect_external_drives()
+    if drives:
+        print(drives[0])
+    else:
+        print("No external drives detected")
+EOF
+
+# Make the Python script executable
+chmod +x $PYTHON_SCRIPT_PATH
 
 # Create the startup script
 cat << 'EOF' > $START_SCRIPT_PATH
 #!/bin/bash
 set -x
 
-LOGFILE=~/start_imswitch.log
+LOGFILE=/home/uc2/start_imswitch.log
 exec > >(tee -a $LOGFILE) 2>&1
 
 echo "Starting IMSwitch Docker container and Chromium"
@@ -22,10 +82,14 @@ done
 
 export DISPLAY=:0
 
-# need to perform:
-# sudo docker run -it --rm -p 8002:8001  -e HEADLESS=1  -e HTTP_PORT=8001  -e UPDATE_GIT=1  
-# -e UPDATE_CONFIG=0  --privileged -e DATA_PATH=/dataset -e CONFIG_PATH=/config -v /media/uc2/SD2/:/dataset
-# -v /home/uc2/:/config  ghcr.io/openuc2/imswitch-noqt-x64:latest
+# Detect the external drive
+EXTERNAL_DRIVE=$(python3 $HOME/detect_drive.py)
+
+if [ "$EXTERNAL_DRIVE" == "No external drives detected" ]; then
+    echo "No external drives detected. Exiting."
+    exit 1
+fi
+
 # Start Docker container in the background
 echo "Running Docker container..."
 nohup sudo docker run --rm -d -p 8001:8001 -p 2222:22 \
@@ -34,14 +98,12 @@ nohup sudo docker run --rm -d -p 8001:8001 -p 2222:22 \
   -e CONFIG_PATH=/config \
   -e CONFIG_FILE=example_uc2_hik_flowstop.json \
   -e UPDATE_GIT=1 -e UPDATE_CONFIG=0 \
-  -v /media/uc2/SD2/:/dataset \
-  -v /home/uc2/:/config \
+  -v $EXTERNAL_DRIVE:/dataset \
+  -v ~/:/config \
   --privileged ghcr.io/openuc2/imswitch-noqt-x64:latest &
 
-
-/home/uc2/ImSwitchConfig
 # Wait a bit to ensure Docker starts
-sleep 10
+sleep 30
 
 # Start Chromium
 echo "Starting Chromium..."
