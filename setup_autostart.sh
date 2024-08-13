@@ -70,6 +70,7 @@ cat << 'EOF' > $START_SCRIPT_PATH
 set -x
 
 LOGFILE=/home/uc2/start_imswitch.log
+DOCKER_LOGFILE=/home/uc2/docker_imswitch.log
 exec > >(tee -a $LOGFILE) 2>&1
 
 echo "Starting IMSwitch Docker container and Chromium"
@@ -100,7 +101,7 @@ nohup sudo docker run --rm -d -p 8001:8001 -p 2222:22 \
   -e UPDATE_GIT=1 -e UPDATE_CONFIG=0 \
   -v $EXTERNAL_DRIVE:/dataset \
   -v ~/:/config \
-  --privileged ghcr.io/openuc2/imswitch-noqt-x64:latest &
+  --privileged ghcr.io/openuc2/imswitch-noqt-x64:latest > $DOCKER_LOGFILE 2>&1 & 
 
 # Wait a bit to ensure Docker starts
 sleep 30

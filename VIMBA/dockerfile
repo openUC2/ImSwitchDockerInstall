@@ -1,0 +1,50 @@
+FROM        continuumio/miniconda3:4.8.2
+
+ENV         PYTHONDONTWRITEBYTECODE=true
+
+# Copy the locally downloaded Vimba package, there is no direct access link for download, from
+# https://www.alliedvision.com/en/products/software.html
+
+FROM continuumio/miniconda3:4.8.2
+
+ENV PYTHONDONTWRITEBYTECODE=true
+
+# Copy the locally downloaded Vimba package, there is no direct access link for download, from
+# https://www.alliedvision.com/en/products/software.html
+
+RUN sed -i 's/buster/oldoldstable/g' /etc/apt/sources.list && \
+    apt-get update && apt-get install -y \
+        wget \
+        tar \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN wget https://downloads.alliedvision.com/Vimba64_v6.0_Linux.tgz && \
+    tar -xzf Vimba64_v6.0_Linux.tgz -C /opt && \
+    rm Vimba64_v6.0_Linux.tgz && \
+    mkdir -p /etc/udev/rules.d && \
+    cd /opt/Vimba_6_0/VimbaUSBTL/ && \
+    ./Install.sh
+
+RUN       cd /opt/Vimba_6_0/VimbaUSBTL/ \
+            && cd ../VimbaPython/Source/ \
+            && python -m pip install . \
+            && cd .. \
+            && rm -rf VimbaGigETL \
+            && rm -rf VimbaCPP \
+            && rm -rf /opt/Vimba_6_0/VimbaC/DynamicLib/x86_32bit \
+            && rm -rf /opt/Vimba_6_0/VimbaCPP/DynamicLib/x86_32bit \
+            && rm -rf /opt/Vimba_6_0/VimbaImageTransform/DynamicLib/x86_32bit \
+            && rm -rf /opt/Vimba_6_0/Tools/Viewer \
+            && rm -rf /opt/Vimba_6_0/Tools/VimbaClassGenerator/Bin/x86_32bit \
+            && rm -rf /opt/Vimba_6_0/Tools/FirmwareUpdater/Bin/x86_32bit \
+            && rm -rf /opt/Vimba_6_0/VimbaC/Examples/Bin/x86_32bit \
+            && rm -rf /opt/Vimba_6_0/VimbaCPP/Examples/Bin/x86_32bit \
+            && rm -rf /opt/Vimba_6_0/VimbaUSBTL/CTI/x86_32bit \
+            && rm -rf /opt/Vimba_6_0/VimbaGigETL/CTI/x86_32bit
+
+ENV         GENICAM_GENTL64_PATH=$GENICAM_GENTL64_PATH:"/opt/Vimba_6_0/VimbaUSBTL/CTI/x86_64bit"
+
+WORKDIR     /opt/Vimba_6_0/VimbaPython/Examples
+
+ENTRYPOINT  ["python"]
