@@ -20,6 +20,10 @@ echo "Install Daheng Driver"
 chmod +x install_dahengdriver.sh
 ./install_dahengdriver.sh
 
+echo "Create Desktop Icons"
+chmod +x create_desktopicons.sh
+./create_desktopicons.sh
+
 echo "Set Autostart for ImSwitch"
 chmod +x setup_autostart.sh
 ./setup_autostart.sh
