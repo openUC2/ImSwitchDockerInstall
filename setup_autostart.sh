@@ -98,7 +98,7 @@ nohup sudo docker run --rm -d -p 8001:8001 -p 2222:22 \
   -e DATA_PATH=/dataset \
   -e CONFIG_PATH=/config \
   -e CONFIG_FILE=example_uc2_hik_flowstop.json \
-  -e UPDATE_INSTALL_GIT=1 \
+  -e UPDATE_INSTALL_GIT=0 \
   -e UPDATE_CONFIG=0 \
   -v $EXTERNAL_DRIVE:/dataset \
   -v ~/imswitch_docker/imswitch_git:/tmp/ImSwitch-changes \
