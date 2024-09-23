@@ -87,8 +87,9 @@ export DISPLAY=:0
 EXTERNAL_DRIVE=$(python3 $HOME/detect_drive.py)
 
 if [ "$EXTERNAL_DRIVE" == "No external drives detected" ]; then
-    echo "No external drives detected. Exiting."
-    exit 1
+    osascript -e 'display notification "No external drives detected. Using ~/Downloads instead." with title "Warning"'
+    echo "No external drives detected. Using ~/Downloads instead."
+    EXTERNAL_DRIVE=~/Downloads
 fi
 
 # Start Docker container in the background

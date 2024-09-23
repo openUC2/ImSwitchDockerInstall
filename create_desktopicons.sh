@@ -21,7 +21,7 @@ sudo docker run -it --rm -p 8001:8001 -p 2222:22 \
 -v ~/Documents/imswitch_docker/imswitch_git:/tmp/ImSwitch-changes \
 -v ~/Documents/imswitch_docker/imswitch_pip:/persistent_pip_packages \
 -v ~/Downloads:/dataset \
--v ~/Downloads:/config \
+-v ~/:/config \
 --privileged ghcr.io/openuc2/imswitch-noqt-x64:latest
 " > "$DESKTOP_PATH/launch_docker_container.sh"
 
