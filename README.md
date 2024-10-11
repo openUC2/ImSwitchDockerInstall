@@ -31,7 +31,7 @@ sudo docker run -it --rm -p 8001:8001  -e HEADLESS=1  -e HTTP_PORT=8001    -e UP
 
 ## change external drive
 
-open the file under `~/start_imswitch.sh` and replace the line `-v /media/uc2/SD2:/dataset` with the usb drive that you can detect with `df -h`
+open the file under `~/Desktop/start_imswitch.sh` and replace the line `-v /media/uc2/SD2:/dataset` with the usb drive that you can detect with `df -h`
 
 ## uninstalling the service
 

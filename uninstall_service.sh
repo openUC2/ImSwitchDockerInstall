@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define variables
-START_SCRIPT_PATH="$HOME/start_imswitch.sh"
+START_SCRIPT_PATH="$HOME/Desktop/start_imswitch.sh"
 SERVICE_FILE_PATH="/etc/systemd/system/start_imswitch.service"
 LOG_FILE_PATH="$HOME/start_imswitch.log"
 SERVICE_LOG_FILE_PATH="$HOME/start_imswitch.service.log"
