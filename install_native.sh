@@ -42,7 +42,6 @@ mkdir -p /opt/MVS/bin/fonts
 
 # Source the bashrc file
 echo "Sourcing .bashrc"
-echo "source ~/.bashrc" >> ~/.bashrc
 source ~/.bashrc
 
 # Set environment variable for MVCAM_COMMON_RUNENV

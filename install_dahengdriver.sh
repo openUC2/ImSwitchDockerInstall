@@ -32,6 +32,5 @@ export LD_LIBRARY_PATH="/usr/lib:/tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1
 pip3 install pillow numpy
 
 # Source the bashrc file
-echo "source ~/.bashrc" >> ~/.bashrc
 source ~/.bashrc
 
