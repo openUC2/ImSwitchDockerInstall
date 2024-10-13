@@ -24,6 +24,10 @@ echo "Create Desktop Icons"
 chmod +x create_desktopicons.sh
 ./create_desktopicons.sh
 
+ehco "Set Wallpaper"
+chmod +x install_backgroundwallpaper.sh
+./install_backgroundwallpaper.sh
+
 echo "Set Autostart for ImSwitch"
 chmod +x setup_autostart.sh
 ./setup_autostart.sh
