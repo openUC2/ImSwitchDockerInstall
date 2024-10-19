@@ -37,7 +37,7 @@ RUN cd /tmp && \
 
 RUN mkdir -p /opt/MVS/bin/fonts
 # Source the bashrc file
-RUN echo "source ~/.bashrc" >> ~/.bashrc
+#RUN echo "source ~/.bashrc" >> ~/.bashrc
 RUN /bin/bash -c "source ~/.bashrc"
 
 # Copy the necessary Python script

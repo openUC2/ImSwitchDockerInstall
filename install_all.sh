@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# install requirements 
+sudo apt-get update
+sudo apt-get install -y git curl
+
 cd ~/Downloads/ImSwitchDockerInstall
 echo "Install Docker"
 chmod +x install_docker_raspi.sh
