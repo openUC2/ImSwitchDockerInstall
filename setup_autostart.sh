@@ -94,11 +94,10 @@ fi
 
 # Start Docker container in the background
 echo "Running Docker container..."
-nohup sudo docker run --rm -d -p 8001:8001 -p 2222:22 \
+nohup sudo docker run --rm -d -p 8001:8001 -p 8002:8002 -p 2222:22 \
   -e HEADLESS=1 -e HTTP_PORT=8001 \
   -e DATA_PATH=/dataset \
   -e CONFIG_PATH=/config \
-  -e CONFIG_FILE=example_uc2_hik_flowstop.json \
   -e UPDATE_INSTALL_GIT=0 \
   -e UPDATE_CONFIG=0 \
   -v $EXTERNAL_DRIVE:/dataset \
@@ -114,6 +113,7 @@ sleep 30
 echo "Starting Chromium..."
 /usr/bin/chromium-browser --start-fullscreen --ignore-certificate-errors \
   --unsafely-treat-insecure-origin-as-secure=https://0.0.0.0:8001 \
+  --unsafely-treat-insecure-origin-as-secure=https://0.0.0.0:8002 \
   --app="data:text/html,<html><body><script>window.location.href='https://0.0.0.0:8001/imswitch/index.html';setTimeout(function(){document.body.style.zoom='0.7';}, 3000);</script></body></html>"
 
 echo "Startup script completed"

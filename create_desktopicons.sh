@@ -15,7 +15,7 @@ chmod +x "$DESKTOP_PATH/update_docker_container.sh"
 echo "#!/bin/bash
 #!/bin/bash
 # Run the docker container with specified parameters
-sudo docker run -it --rm -p 8001:8001 -p 2222:22 \
+sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -p 2222:22 \
 -e CONFIG_PATH=/config \
 -e DATA_PATH=/dataset \
 -v ~/Documents/imswitch_docker/imswitch_git:/tmp/ImSwitch-changes \
@@ -31,6 +31,7 @@ sudo docker run -it --rm -p 8001:8001 -p 2222:22 \
 
 # Make the launch script executable
 chmod +x "$DESKTOP_PATH/launch_docker_container.sh"
+
 
 # Inform the user
 echo "Scripts created on the desktop: update_docker_container.sh and launch_docker_container.sh"

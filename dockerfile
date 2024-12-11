@@ -5,22 +5,37 @@
 # docker stop imswitch_hik
 # sudo docker inspect imswitch_hik
 # docker run --privileged -it imswitch_hik
-# sudo docker run -it --rm -p 8001:8001 -p 2222:22 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_virtual_microscope.json -e UPDATE_GIT=0 -e UPDATE_CONFIG=0 --privileged ghcr.io/openuc2/imswitch-noqt-x64:latest
-# sudo docker run -it --rm -p 8001:8001 -p 2222:22 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_uc2_hik_flowstop.json -e UPDATE_GIT=1 -e UPDATE_CONFIG=0 --privileged imswitch_hik
+# sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -p 2222:22 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_virtual_microscope.json -e UPDATE_GIT=0 -e UPDATE_CONFIG=0 --privileged ghcr.io/openuc2/imswitch-noqt-x64:latest
+# sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -p 2222:22 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_uc2_hik_flowstop.json -e UPDATE_GIT=1 -e UPDATE_CONFIG=0 --privileged imswitch_hik
 # performs python3 /opt/MVS/Samples/aarch64/Python/MvImport/GrabImage.py
 #  sudo docker run -it -e MODE=terminal imswitch_hik
 # docker build --build-arg ARCH=linux/arm64  -t imswitch_hik_arm64 .
 # docker build --build-arg ARCH=linux/amd64  -t imswitch_hik_amd64 .
-# sudo docker run -it --rm -p 8001:8001 -p 2222:22 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_virtual_microscope.json -e UPDATE_GIT=0 -e UPDATE_CONFIG=0 --privileged imswitch_hik
+# sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -p 2222:22 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_virtual_microscope.json -e UPDATE_GIT=0 -e UPDATE_CONFIG=0 --privileged imswitch_hik
 #
-# sudo docker run -it --rm -p 8001:8001 -p 2222:22 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_uc2_hik_flowstop.json -e UPDATE_GIT=1 -e UPDATE_CONFIG=0 --privileged ghcr.io/openuc2/imswitch-noqt-x64:latest
+# sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -p 2222:22 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_uc2_hik_flowstop.json -e UPDATE_GIT=1 -e UPDATE_CONFIG=0 --privileged ghcr.io/openuc2/imswitch-noqt-x64:latest
 # For loading external configs and store data externally
-# sudo docker run -it --rm -p 8001:8001  -e HEADLESS=1  -e HTTP_PORT=8001    -e UPDATE_GIT=1  -e UPDATE_CONFIG=0  -e CONFIG_PATH=/config  --privileged  -v ~/Downloads:/config  imswitch_hik_arm64
-# sudo docker run -it --rm -p 8002:8001  -e HEADLESS=1  -e HTTP_PORT=8001  -e UPDATE_GIT=1  -e UPDATE_CONFIG=0  --privileged -e DATA_PATH=/dataset -e CONFIG_PATH=/config -v /media/uc2/SD2/:/dataset -v /home/uc2/:/config  ghcr.io/openuc2/imswitch-noqt-x64:latest
+# sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -e HEADLESS=1  -e HTTP_PORT=8001    -e UPDATE_GIT=1  -e UPDATE_CONFIG=0  -e CONFIG_PATH=/config  --privileged  -v ~/Downloads:/config  imswitch_hik_arm64
+# sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -e HEADLESS=1  -e HTTP_PORT=8001  -e UPDATE_GIT=1  -e UPDATE_CONFIG=0  --privileged -e DATA_PATH=/dataset  -v /media/uc2/SD2/:/dataset -e CONFIG_FILE=example_uc2_hik_flowstop.json ghcr.io/openuc2/imswitch-noqt-x64:latest
 # sudo docker run -it -e MODE=terminal ghcr.io/openuc2/imswitch-noqt-x64:latest
+# sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -p 2222:22  -e UPDATE_INSTALL_GIT=1  -e PIP_PACKAGES="arkitekt UC2-REST"  -e CONFIG_PATH=/Users/bene/Downloads  -e DATA_PATH=/Users/bene/Downloads  -v ~/Documents/imswitch_docker/imswitch_git:/tmp/ImSwitch-changes  -v ~/Documents/imswitch_docker/imswitch_pip:/persistent_pip_packages  -v /media/uc2/SD2/:/dataset  -v ~/Downloads:/config  --privileged imswitch_hik
+# sudo docker pull docker pull ghcr.io/openuc2/imswitch-noqt-x64:latest
 
-
-
+# Witht he following configuration we can do the following:
+# 1. Update the ImSwitch repository and install the changes and make them persistent by mounting a volume to /tmp/ImSwitch-changes and /persistent_pip_packages respectively
+# both of which are mounted to the host machine directories
+# 2. Use a ImSwitchConfig folder that is mounted to the host machine directory /root/ImSwitchConfig
+# 3. Use a dataset folder that is mounted to the host machine directory /media/uc2/SD2
+# 4. Install additional pip packages by setting the PIP_PACKAGES environment variable to a space separated list of packages and make them persistent by mounting a volume to /persistent_pip_packages
+# sudo docker run -it --rm -p 8001:8001 -p 8002:8002 \
+# -e UPDATE_INSTALL_GIT=1 \
+# -e PIP_PACKAGES="arkitekt UC2-REST" imswitch_hik \
+# -e DATA_PATH=/dataset \
+# -e CONFIG_PATH=/config \
+# -v ~/Documents/imswitch_docker/imswitch_git:/tmp/ImSwitch-changes \
+# -v ~/Documents/imswitch_docker/imswitch_pip:/persistent_pip_packages \
+# -v /media/uc2/SD2/:/dataset \
+# -v ~/Downloads:/config 
 
 
 # Use an appropriate base image for multi-arch support
@@ -30,7 +45,7 @@ FROM ubuntu:22.04
 ARG TARGETPLATFORM
 ENV TZ=America/Los_Angeles
 
-# Install necessary dependencies
+# Install necessary dependencies and prepare the environment as usual
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
@@ -61,7 +76,7 @@ RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
 ENV PATH=/opt/conda/bin:$PATH
 
 # Create conda environment and install packages
-RUN /opt/conda/bin/conda create -y --name imswitch python=3.10
+RUN /opt/conda/bin/conda create -y --name imswitch python=3.11
 
 RUN /opt/conda/bin/conda install -n imswitch -y -c conda-forge h5py numcodecs && \
     conda clean --all -f -y
@@ -116,78 +131,66 @@ RUN mkdir -p /opt/MVS/bin/fonts
 # Set environment variable for MVCAM_COMMON_RUNENV
 ENV MVCAM_COMMON_RUNENV=/opt/MVS/lib LD_LIBRARY_PATH=/opt/MVS/lib/64:/opt/MVS/lib/32:$LD_LIBRARY_PATH
 
-# Clone the config folder
-RUN git clone https://github.com/openUC2/ImSwitchConfig /root/ImSwitchConfig
+# Install vsftpd
+RUN apt-get update && apt-get install -y vsftpd
 
+# Configure vsftpd
+RUN echo "listen=YES" >> /etc/vsftpd.conf && \
+    echo "anonymous_enable=YES" >> /etc/vsftpd.conf && \
+    echo "anon_root=/dataset" >> /etc/vsftpd.conf && \
+    echo "local_enable=YES" >> /etc/vsftpd.conf && \
+    echo "write_enable=YES" >> /etc/vsftpd.conf && \
+    echo "chroot_local_user=YES" >> /etc/vsftpd.conf && \
+    echo "allow_writeable_chroot=YES" >> /etc/vsftpd.conf
+
+# first install all the dependencies not not to install them again in a potential "breaking update"
 # Clone the repository and install dependencies
 RUN git clone https://github.com/openUC2/imSwitch /tmp/ImSwitch && \
     cd /tmp/ImSwitch && \
     /bin/bash -c "source /opt/conda/bin/activate imswitch && pip install -e /tmp/ImSwitch"
+
+# Clone the config folder
+RUN git clone https://github.com/openUC2/ImSwitchConfig /root/ImSwitchConfig
 
 # Install UC2-REST
 RUN git clone https://github.com/openUC2/UC2-REST /tmp/UC2-REST && \
     cd /tmp/UC2-REST && \
     /bin/bash -c "source /opt/conda/bin/activate imswitch && pip install -e /tmp/UC2-REST"
 
-# Force pull imswitch
-ARG CACHEBUST=1
+
+# we want psygnal to be installed without binaries - so first remove it 
+RUN /bin/bash -c "source /opt/conda/bin/activate imswitch && pip uninstall psygnal -y"
+RUN /bin/bash -c "source /opt/conda/bin/activate imswitch && pip install psygnal --no-binary :all:"
+
+# fix the version of OME-ZARR 
+RUN /bin/bash -c "source /opt/conda/bin/activate imswitch && pip install ome-zarr==0.9.0"
+RUN /bin/bash -c "source /opt/conda/bin/activate imswitch && pip install scikit-image==0.19.3"
+RUN /bin/bash -c "source /opt/conda/bin/activate imswitch && pip install numpy==1.26.4"
+
+# Always pull the latest version of ImSwitch and UC2-REST repositories
+# Adding a dynamic build argument to prevent caching
+ARG BUILD_DATE
+RUN echo "Building on ${BUILD_DATE}"
+
+
+# Clone the config folder
+RUN cd /root/ImSwitchConfig && \
+    git pull
+
+# now update potential breaking changes
 RUN cd /tmp/ImSwitch && \
-     git pull
-        #/bin/bash -c "source /opt/conda/bin/activate imswitch && pip install -e /tmp/ImSwitch --no-deps"
+    git pull && \
+    /bin/bash -c "source /opt/conda/bin/activate imswitch && pip install -e /tmp/ImSwitch"
 
-# Expose SSH port and HTTP port
-EXPOSE 22 8001
 
-CMD ["/bin/bash", "-c", "\
-    if [ \"$MODE\" = \"terminal\" ]; then \
-        /bin/bash; \
-    else \
-        echo 'LSUSB' && lsusb && \
-        echo 'Listing external USB storage devices' && \
-        ls /media && \
-        /usr/sbin/sshd -D & \
-        ls /root/ImSwitchConfig && \
-        if [ \"$UPDATE_GIT\" = \"true\" ] || [ \"$UPDATE_GIT\" = \"1\" ]; then \
-            echo 'Pulling the ImSwitch repository' && \
-            cd /tmp/ImSwitch && \
-            git pull; \
-        fi && \
-        if [ \"$UPDATE_INSTALL_GIT\" = \"true\" ] || [ \"$UPDATE_INSTALL_GIT\" = \"1\" ]; then \
-            echo 'Pulling the ImSwitch repository and installing' && \
-            cd /tmp/ImSwitch && \
-            git pull && \
-            /bin/bash -c 'source /opt/conda/bin/activate imswitch && pip install -e /tmp/ImSwitch'; \
-        fi && \
-        if [ \"$UPDATE_UC2\" = \"true\" ] || [ \"$UPDATE_UC2\" = \"1\" ]; then \
-            echo 'Pulling the UC2-REST repository' && \
-            cd /tmp/UC2-REST && \
-            git pull; \
-        fi && \
-        if [ \"$UPDATE_INSTALL_UC2\" = \"true\" ] || [ \"$UPDATE_INSTALL_UC2\" = \"1\" ]; then \
-            echo 'Pulling the UC2-REST repository and installing' && \
-            cd /tmp/UC2-REST && \
-            git pull && \
-            /bin/bash -c 'source /opt/conda/bin/activate imswitch && pip install -e /tmp/UC2-ESP'; \
-        fi && \
-        if [ \"$UPDATE_CONFIG\" = \"true\" ]; then \
-            echo 'Pulling the ImSwitchConfig repository' && \
-            cd /root/ImSwitchConfig && \
-            git pull; \
-        fi && \
-        if [ -z \"$CONFIG_PATH\" ]; then \
-            CONFIG_FILE=${CONFIG_FILE:-/root/ImSwitchConfig/imcontrol_setup/example_virtual_microscope.json}; \
-        else \
-            CONFIG_FILE=None; \
-        fi && \
-        source /opt/conda/bin/activate imswitch && \
-        HEADLESS=${HEADLESS:-1} && \
-        HTTP_PORT=${HTTP_PORT:-8001} && \
-        USB_DEVICE_PATH=${USB_DEVICE_PATH:-/dev/bus/usb} && \
-        CONFIG_PATH=${CONFIG_PATH:-None} && \
-        DATA_PATH=${DATA_PATH:-None} && \        
-        echo \"python3 /tmp/ImSwitch/main.py --headless $HEADLESS --config-file $CONFIG_FILE --http-port $HTTP_PORT --config-folder $CONFIG_PATH --ext-data-folder $DATA_PATH \" && \
-        python3 /tmp/ImSwitch/main.py --headless $HEADLESS --config-file $CONFIG_FILE --http-port $HTTP_PORT --config-folder $CONFIG_PATH --ext-data-folder $DATA_PATH; \
-    fi"]
+# Install UC2-REST
+RUN cd /tmp/UC2-REST && \
+    git pull && \
+    /bin/bash -c "source /opt/conda/bin/activate imswitch && pip install -e /tmp/UC2-REST"
 
-# source /opt/conda/bin/activate imswitch
-# python3 /tmp/ImSwitch/main.py  --headless 1 --config-file example_virtual_microscope.json --config-folder /config
+# Expose FTP, SSH port and HTTP port
+EXPOSE  21 22 8001 8002
+
+ADD entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
