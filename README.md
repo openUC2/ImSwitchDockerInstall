@@ -28,6 +28,10 @@ sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -e HEADLESS=1  -e HTTP_PORT=8
 
 - `-v ~/Downloads:/config` corresponds to the Github ImSwitchConfig folder that was downloaded and used for ImSwitch
 - `-v /media/uc2/SD2:/dataset` corresponds to the folder where we will save the data to
+- 
+## Connect to Wifi 
+
+use `nmtui` for discovering and connecting to Wifi signals nearby.
 
 ## change external drive
 
