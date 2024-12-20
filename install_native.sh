@@ -107,3 +107,5 @@ sudo ufw allow 8002
 
 echo "Installation complete. To run the application, use the following command:"
 echo "source /opt/conda/bin/activate imswitch311 && python3 ~/ImSwitch/main.py --headless --http-port 8001"
+
+echo "source /opt/conda/bin/activate imswitch311" >> ~/.bashrc
