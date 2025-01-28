@@ -4,6 +4,7 @@
 sudo apt-get update
 sudo apt-get install -y git curl
 
+
 cd ~/Downloads/ImSwitchDockerInstall
 echo "Install Docker"
 chmod +x install_docker_raspi.sh
@@ -45,3 +46,8 @@ echo "Set Autostart for ImSwitch"
 chmod +x setup_autostart.sh
 ./setup_autostart.sh
 
+# add serial devices to user group
+sudo usermod -a -G dialout $USER
+sudo usermod -a -G tty $USER
+echo "Please reboot to take effect of adding serial devices to user group"
+ 

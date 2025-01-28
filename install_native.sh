@@ -90,7 +90,7 @@ source /opt/conda/bin/activate imswitch311 && pip install -e ~/UC2-REST
 # source /opt/conda/bin/activate imswitch && pip uninstall psygnal -y
 # source /opt/conda/bin/activate imswitch && pip install psygnal --no-binary :all:
 
-# fix the version of OME-ZARR 
+# fix the version of OME-ZARR
 source /opt/conda/bin/activate imswitch && pip install ome-zarr==0.9.0
 source /opt/conda/bin/activate imswitch && pip install scikit-image==0.19.3
 source /opt/conda/bin/activate imswitch && pip install numpy==1.26.4
@@ -109,18 +109,4 @@ sudo ufw allow 8888
 echo "Installation complete. To run the application, use the following command:"
 echo "source /opt/conda/bin/activate imswitch311 && python3 ~/ImSwitch/main.py --headless --http-port 8001"
 
-# Conda initialisieren
-__conda_setup="$('/opt/conda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/opt/conda/etc/profile.d/conda.sh" ]; then
-        . "/opt/conda/etc/profile.d/conda.sh"
-    else
-        export PATH="/opt/conda/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-
-# Conda-Umgebung aktivieren
-conda activate imswitch311
+echo "source /opt/conda/bin/activate imswitch311" >> ~/.bashrc
