@@ -94,7 +94,7 @@ fi
 
 # Start Docker container in the background
 echo "Running Docker container..."
-nohup sudo docker run --rm -d -p 8001:8001 -p 8002:8002 -p 2222:22 \
+nohup sudo docker run --rm -d -p 8001:8001 -p 8002:8002 -p 8888:8888 -p 2222:22 \
   -e HEADLESS=1 -e HTTP_PORT=8001 \
   -e DATA_PATH=/dataset \
   -e CONFIG_PATH=/config \

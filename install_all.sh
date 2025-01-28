@@ -25,6 +25,14 @@ echo "Install Daheng Driver"
 chmod +x install_dahengdriver.sh
 ./install_dahengdriver.sh
 
+echo "Install Vimba Driver"
+chmod +x install_vimba.sh
+./install_vimba.sh
+
+echo "Setup RaspAp"
+chmod +x install_raspap.sh
+./install_raspap.sh
+
 echo "Create Desktop Icons"
 chmod +x create_desktopicons.sh
 ./create_desktopicons.sh

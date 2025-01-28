@@ -100,10 +100,27 @@ source /opt/conda/bin/activate imswitch && pip install numpy==1.26.4
 source /opt/conda/bin/activate imswitch311 && python3 -m pip install numpy==1.26.4
 
 # Expose SSH port and HTTP port
-echo "Exposing ports 22, 8002 and 8001"
+echo "Exposing ports 22, 8002 and 8001 and 8888"
 sudo ufw allow 22
 sudo ufw allow 8001
 sudo ufw allow 8002
+sudo ufw allow 8888
 
 echo "Installation complete. To run the application, use the following command:"
 echo "source /opt/conda/bin/activate imswitch311 && python3 ~/ImSwitch/main.py --headless --http-port 8001"
+
+# Conda initialisieren
+__conda_setup="$('/opt/conda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/opt/conda/etc/profile.d/conda.sh" ]; then
+        . "/opt/conda/etc/profile.d/conda.sh"
+    else
+        export PATH="/opt/conda/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+
+# Conda-Umgebung aktivieren
+conda activate imswitch311

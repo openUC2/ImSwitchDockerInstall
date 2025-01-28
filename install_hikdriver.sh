@@ -1,4 +1,5 @@
 #!/bin/bash
+# Install HIK Driver globally 
 
 cd /tmp 
 #wget https://www.hikrobotics.com/cn2/source/support/software/MVS_STD_GML_V2.1.2_231116.zip 
