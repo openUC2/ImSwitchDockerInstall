@@ -94,3 +94,59 @@ ubuntu@ip-172-26-5-67:~$ sudo systemctl restart caddy
 ubuntu@ip-172-26-5-67:~$ sudo docker run -it --rm -p 8001:8001 -p 8003:8002 -p 2222:22 -p 8889:8888 -e HEADLESS=1 -e HTTP_PORT=8001 -e C
 ONFIG_FILE=example_virtual_microscope.json -e UPDATE_GIT=0 -e UPDATE_CONFIG=0 -v ~/:/config -e CONFIG_PATH=/config -e ssl=0  --privilege
 d ghcr.io/openuc2/imswitch-noqt-x64:latest 
+
+
+
+
+
+
+
+## in Code:
+
+```bash
+#!/bin/bash
+
+# Install ImSwitch on Lightsail
+
+# Update package lists and install necessary packages
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg
+
+# Create the directory for Docker's keyrings
+sudo install -m 0755 -d /etc/apt/keyrings
+
+# Download the Docker GPG key and place it in the keyrings directory
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# Ensure the keyring has proper permissions
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Add the Docker repository to Apt sources
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Update the package lists again
+sudo apt-get update
+
+# Install Docker and its components
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Add swap if not present
+if ! swapon -s | grep -q "/swapfile"; then
+  sudo fallocate -l 4G /swapfile
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
+  sudo swapon /swapfile
+  echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+fi
+
+# Clone the ImSwitch repository
+mkdir -p ~/Desktop
+cd ~
+git clone https://github.com/openUC2/ImSwitchDockerInstall
+cd ImSwitchDockerInstall
+
+# Make the installation script executable and run it
+sudo docker pull ghcr.io/openuc2/imswitch-noqt-x64:latest
+```

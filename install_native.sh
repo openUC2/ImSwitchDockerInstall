@@ -66,7 +66,7 @@ export PATH=/opt/conda/bin:$PATH
 # Create conda environment and install packages
 echo "Creating conda environment and installing packages"
 conda create -y --name imswitch311 python=3.11
-conda install -n imswitch -y -c conda-forge h5py numcodecs
+conda install -n imswitch -y -c conda-forge h5py numcodecs scikit-image
 conda clean --all -f -y
 
 # Clone the config folder
