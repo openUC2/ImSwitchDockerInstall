@@ -5,7 +5,7 @@
 sudo apt-get update
 sudo apt-get install -y git
 
-curl -sL https://install.raspap.com | bash -s -- --yes --wireguard 0 --adblock 0 --openvpn 0 --vpnui 0 --restapi 1 --update
+curl -sL https://install.raspap.com | bash -s -- --yes --wireguard 0 --adblock 0 --openvpn 0 --restapi 1 --update
 
 # Generate your custom SSID with random digits
 SSID="openUC2-$(tr -dc 0-9 < /dev/urandom | head -c 6)"
