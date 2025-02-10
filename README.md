@@ -23,7 +23,7 @@ chmod +x install_all.sh
 And then 
 
 ```bash
-sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -p 8888:8888 -e HEADLESS=1  -e HTTP_PORT=8001    -e UPDATE_GIT=1  -e UPDATE_CONFIG=0  -e CONFIG_PATH=/config   -v ~/Downloads:/config --privileged -e DATA_PATH=/dataset  -v /media/uc2/SD2:/dataset  ghcr.io/openuc2/imswitch-noqt-x64:latest
+sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -p 8888:8888 -e HEADLESS=1  -e HTTP_PORT=8001    -e UPDATE_GIT=1  -e UPDATE_CONFIG=0  -e CONFIG_PATH=/config   -v ~/Downloads:/config --privileged -e DATA_PATH=/dataset  -v /media/uc2/SD2:/dataset  ghcr.io/openuc2/imswitch-noqt-arm64:latest
 ```
 
 - `-v ~/Downloads:/config` corresponds to the Github ImSwitchConfig folder that was downloaded and used for ImSwitch

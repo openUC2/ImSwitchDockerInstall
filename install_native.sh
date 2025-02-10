@@ -92,9 +92,7 @@ source /opt/conda/bin/activate imswitch311 && pip install -e ~/UC2-REST
 
 # fix the version of OME-ZARR
 source /opt/conda/bin/activate imswitch && pip install ome-zarr==0.9.0
-source /opt/conda/bin/activate imswitch && pip install scikit-image==0.19.3
-source /opt/conda/bin/activate imswitch && pip install numpy==1.26.4
-
+source /opt/conda/bin/activate imswitch && conda install -c conda-forge --strict-channel-priority numpy scikit-image==0.19.3 -y
 
 # fix numpy
 source /opt/conda/bin/activate imswitch311 && python3 -m pip install numpy==1.26.4

@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 
 # Install RaspAP silently with defaults
-
+mkdir tmp 
 sudo apt-get update
 sudo apt-get install -y git
+
+sudo apt-get install -y hostapd
+sudo mkdir -p /etc/raspap/system
+sudo systemctl unmask hostapd
+sudo systemctl enable hostapd
+sudo systemctl start hostapd
 
 curl -sL https://install.raspap.com | bash -s -- --yes --wireguard 0 --adblock 0 --openvpn 0 --restapi 1 --update
 
