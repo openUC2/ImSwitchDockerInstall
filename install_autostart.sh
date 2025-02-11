@@ -69,8 +69,8 @@ cat << 'EOF' > $START_SCRIPT_PATH
 #!/bin/bash
 set -x
 
-LOGFILE=/home/uc2/start_imswitch.log
-DOCKER_LOGFILE=/home/uc2/docker_imswitch.log
+LOGFILE=~/start_imswitch.log
+DOCKER_LOGFILE=~/docker_imswitch.log
 exec > >(tee -a $LOGFILE) 2>&1
 
 echo "Starting IMSwitch Docker container and Chromium"
@@ -109,12 +109,17 @@ nohup sudo docker run --rm -d -p 8001:8001 -p 8002:8002 -p 8888:8888 -p 2222:22 
 # Wait a bit to ensure Docker starts
 sleep 30
 
-# Start Chromium
-echo "Starting Chromium..."
-/usr/bin/chromium-browser --start-fullscreen --ignore-certificate-errors \
-  --unsafely-treat-insecure-origin-as-secure=https://0.0.0.0:8001 \
-  --unsafely-treat-insecure-origin-as-secure=https://0.0.0.0:8002 \
-  --app="data:text/html,<html><body><script>window.location.href='https://0.0.0.0:8001/imswitch/index.html';setTimeout(function(){document.body.style.zoom='0.7';}, 3000);</script></body></html>"
+
+# Check if Chromium is installed and DISPLAY is set
+if command -v chromium-browser &> /dev/null && [ "$DISPLAY" == ":0" ]; then
+  echo "Starting Chromium..."
+  /usr/bin/chromium-browser --start-fullscreen --ignore-certificate-errors \
+    --unsafely-treat-insecure-origin-as-secure=https://0.0.0.0:8001 \
+    --unsafely-treat-insecure-origin-as-secure=https://0.0.0.0:8002 \
+    --app="data:text/html,<html><body><script>window.location.href='https://0.0.0.0:8001/imswitch/index.html';setTimeout(function(){document.body.style.zoom='0.7';}, 3000);</script></body></html>"
+else
+  echo "Chromium is not installed or DISPLAY is not set to :0. Skipping Chromium start."
+fi
 
 echo "Startup script completed"
 EOF
@@ -138,8 +143,8 @@ User=$USER
 Environment=DISPLAY=:0
 Restart=on-failure
 TimeoutSec=300
-StandardOutput=append:/home/uc2/start_imswitch.service.log
-StandardError=append:/home/uc2/start_imswitch.service.log
+StandardOutput=append:~/start_imswitch.service.log
+StandardError=append:~/start_imswitch.service.log
 
 [Install]
 WantedBy=graphical.target

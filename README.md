@@ -9,7 +9,7 @@ This installs the full package:
 - Docker
 - ImSwitch in Docker
 - Drivers
-- Autostart on Raspi with autoupdate
+- install_autostart on Raspi with autoupdate
    
 Run as sudo (e.g. `sudo -s`)
 ```bash

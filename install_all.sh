@@ -4,6 +4,9 @@
 sudo apt-get update
 sudo apt-get install -y git curl
 
+# in case they don't exist create Download/Desktop folder (e.g. lite)
+mkdir ~/Downloads
+mkdir ~/Desktop
 
 cd ~/Downloads/ImSwitchDockerInstall
 echo "Install Docker"
@@ -42,9 +45,9 @@ ehco "Set Wallpaper"
 chmod +x install_backgroundwallpaper.sh
 ./install_backgroundwallpaper.sh
 
-echo "Set Autostart for ImSwitch"
-chmod +x setup_autostart.sh
-./setup_autostart.sh
+echo "Set install_autostart for ImSwitch"
+chmod +x setup_install_autostart.sh
+./setup_install_autostart.sh
 
 # add serial devices to user group
 sudo usermod -a -G dialout $USER
