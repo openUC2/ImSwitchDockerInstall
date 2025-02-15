@@ -3,34 +3,45 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   pi-gen-build:
     runs-on: ubuntu-latest
     steps:
-      # Make sure your repository is checked out so the scripts are available
       - name: Check out repository
         uses: actions/checkout@v3
 
-      # Prepare a custom pi-gen stage that copies and runs your install scripts
-      - name: Create custom stage
+      - name: List files for debugging
         run: |
-          # 1) Create a directory for the stage
-          mkdir -p custom-stage/00-install-scripts
+          echo "List of current directory contents:"
+          ls -la
+          echo "Attempting to list each expected script in the root of repository:"
+          ls -l create_desktopicons.sh
+          ls -l git_clone_imswitchconfig.sh
+          ls -l install_autostart.sh
+          ls -l install_dahengdriver.sh
+          ls -l install_docker_raspi.sh
+          ls -l install_hikdriver.sh
+          ls -l install_native.sh
+          ls -l install_raspap.sh
+          ls -l install_vimba.sh
 
-          # 2) Copy all the scripts into the stage
-          cp create_desktopicons.sh custom-stage/00-install-scripts/
-          cp git_clone_imswitchconfig.sh custom-stage/00-install-scripts/
-          cp install_autostart.sh custom-stage/00-install-scripts/
-          cp install_dahengdriver.sh custom-stage/00-install-scripts/
-          cp install_docker_raspi.sh custom-stage/00-install-scripts/
-          cp install_hikdriver.sh custom-stage/00-install-scripts/
-          cp install_native.sh custom-stage/00-install-scripts/
-          cp install_raspap.sh custom-stage/00-install-scripts/
-          cp install_vimba.sh custom-stage/00-install-scripts/
+      - name: Prepare custom stage
+        run: |
+          mkdir -p custom-stage/00-install-scripts/files/home/pi/scripts
+          
+          # Copy scripts into the stage
+          cp create_desktopicons.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp git_clone_imswitchconfig.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_autostart.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_dahengdriver.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_docker_raspi.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_hikdriver.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_native.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_raspap.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_vimba.sh custom-stage/00-install-scripts/files/home/pi/scripts/
 
-          # 3) Create a 'prerun.sh' to pull in the previous root filesystem
+          # Create a prerun.sh script for the stage
           cat << 'EOF' > custom-stage/prerun.sh
           #!/bin/bash -e
           if [ ! -d "${ROOTFS_DIR}" ]; then
@@ -39,44 +50,48 @@ jobs:
           EOF
           chmod +x custom-stage/prerun.sh
 
-          # 4) Create '00-run-chroot.sh' to execute all scripts inside the target image
-          cat << 'EOF' > custom-stage/00-install-scripts/00-run-chroot.sh
-          #!/bin/bash
-          set -e
+          # Create 00-run.sh for host commands (chmod in target rootfs)
+          cat << 'EOF' > custom-stage/00-install-scripts/00-run.sh
+          #!/bin/bash -e
 
-          # Make everything executable
-          chmod +x /00-install-scripts/*.sh
+          echo "Host is setting executable bits for scripts inside \${ROOTFS_DIR}/home/pi/scripts:"
+          ls -l \${ROOTFS_DIR}/home/pi/scripts
 
-          # Example: run each of your installation scripts in chroot
-          /00-install-scripts/install_docker_raspi.sh
-          /00-install-scripts/install_native.sh
-          /00-install-scripts/install_autostart.sh
-          /00-install-scripts/install_raspap.sh
-          /00-install-scripts/install_dahengdriver.sh
-          /00-install-scripts/install_hikdriver.sh
-          /00-install-scripts/install_vimba.sh
-          /00-install-scripts/git_clone_imswitchconfig.sh
-          /00-install-scripts/create_desktopicons.sh
-
-          echo "All custom install scripts executed successfully."
+          chmod +x \${ROOTFS_DIR}/home/pi/scripts/*.sh
           EOF
-          chmod +x custom-stage/00-install-scripts/00-run-chroot.sh
+          chmod +x custom-stage/00-install-scripts/00-run.sh
 
-      # Run pi-gen with our custom stage appended
+          # Create 01-run-chroot (executed in chroot environment)
+          cat << 'EOF' > custom-stage/00-install-scripts/01-run-chroot
+          #!/bin/bash -e
+
+          echo "Scripts now present in /home/pi/scripts (inside chroot):"
+          ls -l /home/pi/scripts
+
+          cd /home/pi/scripts
+          ./install_docker_raspi.sh
+          ./install_native.sh
+          ./install_autostart.sh
+          ./install_raspap.sh
+          ./install_dahengdriver.sh
+          ./install_hikdriver.sh
+          ./install_vimba.sh
+          ./git_clone_imswitchconfig.sh
+          ./create_desktopicons.sh
+
+          echo "All custom scripts executed inside chroot."
+          EOF
+          chmod +x custom-stage/00-install-scripts/01-run-chroot
+
       - name: Run pi-gen
         uses: usimd/pi-gen-action@v1
         with:
-          # Provide a name for the generated image
           image-name: raspios-custom
-
-          # By default, pi-gen exports stage2 as 'lite' image.
-          # We append our custom stage after stage2 so it includes all prior changes.
           stage-list: stage0 stage1 stage2 ./custom-stage
 
-      # Optionally, upload the built image as an artifact:
-      - name: Upload image
+      - name: Upload image artifact
         if: ${{ success() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: raspios-custom-image
           path: ${{ steps.Run_pi-gen.outputs.image-path }}
