@@ -80,6 +80,7 @@ jobs:
           chmod +x custom-stage/00-install-scripts/01-run-chroot
 
       - name: Run pi-gen
+        id: build
         uses: usimd/pi-gen-action@v1
         with:
           image-name: raspios-custom
@@ -90,4 +91,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: raspios-custom-image
-          path: ${{ steps.Run_pi-gen.outputs.image-path }}
+          path: ${{ steps.build.outputs.image-path }}
