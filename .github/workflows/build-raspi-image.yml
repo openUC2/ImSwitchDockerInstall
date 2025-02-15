@@ -4,7 +4,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-      
 
 jobs:
   pi-gen-build:
@@ -17,7 +16,7 @@ jobs:
         run: |
           echo "List of current directory contents:"
           ls -la
-          echo "Attempting to list each expected script in the root of repository:"
+          echo "Listing expected scripts in repository root:"
           ls -l create_desktopicons.sh
           ls -l git_clone_imswitchconfig.sh
           ls -l install_autostart.sh
@@ -32,7 +31,6 @@ jobs:
         run: |
           mkdir -p custom-stage/00-install-scripts/files/home/pi/scripts
           
-          # Copy scripts into the stage
           cp create_desktopicons.sh custom-stage/00-install-scripts/files/home/pi/scripts/
           cp git_clone_imswitchconfig.sh custom-stage/00-install-scripts/files/home/pi/scripts/
           cp install_autostart.sh custom-stage/00-install-scripts/files/home/pi/scripts/
@@ -43,7 +41,6 @@ jobs:
           cp install_raspap.sh custom-stage/00-install-scripts/files/home/pi/scripts/
           cp install_vimba.sh custom-stage/00-install-scripts/files/home/pi/scripts/
 
-          # Create a prerun.sh script for the stage
           cat << 'EOF' > custom-stage/prerun.sh
           #!/bin/bash -e
           if [ ! -d "${ROOTFS_DIR}" ]; then
@@ -52,24 +49,22 @@ jobs:
           EOF
           chmod +x custom-stage/prerun.sh
 
-          # Create 00-run.sh for host commands (chmod in target rootfs)
           cat << 'EOF' > custom-stage/00-install-scripts/00-run.sh
           #!/bin/bash -e
-
-          echo "Host is setting executable bits for scripts inside \${ROOTFS_DIR}/home/pi/scripts:"
-          ls -l \${ROOTFS_DIR}/home/pi/scripts
-
-          chmod +x \${ROOTFS_DIR}/home/pi/scripts/*.sh
+          if [ -d "\${ROOTFS_DIR}/home/pi/scripts" ]; then
+            echo "Host is setting executable bits for scripts in \${ROOTFS_DIR}/home/pi/scripts:"
+            ls -l "\${ROOTFS_DIR}/home/pi/scripts"
+          else
+            echo "Directory \${ROOTFS_DIR}/home/pi/scripts does not exist yet."
+          fi
+          chmod +x "\${ROOTFS_DIR}/home/pi/scripts"/*.sh || echo "No scripts found to chmod"
           EOF
           chmod +x custom-stage/00-install-scripts/00-run.sh
 
-          # Create 01-run-chroot (executed in chroot environment)
           cat << 'EOF' > custom-stage/00-install-scripts/01-run-chroot
           #!/bin/bash -e
-
-          echo "Scripts now present in /home/pi/scripts (inside chroot):"
+          echo "Listing scripts in /home/pi/scripts (inside chroot):"
           ls -l /home/pi/scripts
-
           cd /home/pi/scripts
           ./install_docker_raspi.sh
           ./install_native.sh
@@ -80,7 +75,6 @@ jobs:
           ./install_vimba.sh
           ./git_clone_imswitchconfig.sh
           ./create_desktopicons.sh
-
           echo "All custom scripts executed inside chroot."
           EOF
           chmod +x custom-stage/00-install-scripts/01-run-chroot
