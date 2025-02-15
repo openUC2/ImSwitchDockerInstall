@@ -1,0 +1,82 @@
+name: Build-RaspberryPi-Image
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  pi-gen-build:
+    runs-on: ubuntu-latest
+    steps:
+      # Make sure your repository is checked out so the scripts are available
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # Prepare a custom pi-gen stage that copies and runs your install scripts
+      - name: Create custom stage
+        run: |
+          # 1) Create a directory for the stage
+          mkdir -p custom-stage/00-install-scripts
+
+          # 2) Copy all the scripts into the stage
+          cp create_desktopicons.sh custom-stage/00-install-scripts/
+          cp git_clone_imswitchconfig.sh custom-stage/00-install-scripts/
+          cp install_autostart.sh custom-stage/00-install-scripts/
+          cp install_dahengdriver.sh custom-stage/00-install-scripts/
+          cp install_docker_raspi.sh custom-stage/00-install-scripts/
+          cp install_hikdriver.sh custom-stage/00-install-scripts/
+          cp install_native.sh custom-stage/00-install-scripts/
+          cp install_raspap.sh custom-stage/00-install-scripts/
+          cp install_vimba.sh custom-stage/00-install-scripts/
+
+          # 3) Create a 'prerun.sh' to pull in the previous root filesystem
+          cat << 'EOF' > custom-stage/prerun.sh
+          #!/bin/bash -e
+          if [ ! -d "${ROOTFS_DIR}" ]; then
+            copy_previous
+          fi
+          EOF
+          chmod +x custom-stage/prerun.sh
+
+          # 4) Create '00-run-chroot.sh' to execute all scripts inside the target image
+          cat << 'EOF' > custom-stage/00-install-scripts/00-run-chroot.sh
+          #!/bin/bash
+          set -e
+
+          # Make everything executable
+          chmod +x /00-install-scripts/*.sh
+
+          # Example: run each of your installation scripts in chroot
+          /00-install-scripts/install_docker_raspi.sh
+          /00-install-scripts/install_native.sh
+          /00-install-scripts/install_autostart.sh
+          /00-install-scripts/install_raspap.sh
+          /00-install-scripts/install_dahengdriver.sh
+          /00-install-scripts/install_hikdriver.sh
+          /00-install-scripts/install_vimba.sh
+          /00-install-scripts/git_clone_imswitchconfig.sh
+          /00-install-scripts/create_desktopicons.sh
+
+          echo "All custom install scripts executed successfully."
+          EOF
+          chmod +x custom-stage/00-install-scripts/00-run-chroot.sh
+
+      # Run pi-gen with our custom stage appended
+      - name: Run pi-gen
+        uses: usimd/pi-gen-action@v1
+        with:
+          # Provide a name for the generated image
+          image-name: raspios-custom
+
+          # By default, pi-gen exports stage2 as 'lite' image.
+          # We append our custom stage after stage2 so it includes all prior changes.
+          stage-list: stage0 stage1 stage2 ./custom-stage
+
+      # Optionally, upload the built image as an artifact:
+      - name: Upload image
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: raspios-custom-image
+          path: ${{ steps.Run_pi-gen.outputs.image-path }}
