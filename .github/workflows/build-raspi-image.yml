@@ -93,7 +93,7 @@ jobs:
 
       - name: Upload image artifact
         if: ${{ success() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: raspios-custom-image
           path: ${{ steps.Run_pi-gen.outputs.image-path }}
