@@ -83,12 +83,25 @@ jobs:
         id: build
         uses: usimd/pi-gen-action@v1
         with:
-          image-name: raspios-custom
+          image-name: imswitch-raspi-lite
           stage-list: stage0 stage1 stage2 ./custom-stage
+          disable-first-boot-user-rename: 0
+          enable-noobs: false
+          enable-ssh: 1
+          hostname: uc2
+          user-password: youseetoo
+          keyboard-layout: de
+          timezone: Europe/Berlin
+          locale: en_US.UTF-8
+          packages: git nano 
+          wpa-country: DE
+          wifi-ssid: "Blynk"
+          wifi-psk: "12345678"
+          verbose-output: true
 
       - name: Upload image artifact
         if: ${{ success() }}
         uses: actions/upload-artifact@v4
         with:
-          name: raspios-custom-image
+          name: imswitch-raspi-lite
           path: ${{ steps.build.outputs.image-path }}
