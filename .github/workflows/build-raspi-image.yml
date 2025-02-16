@@ -52,10 +52,10 @@ jobs:
           cat << 'EOF' > custom-stage/00-install-scripts/00-run.sh
           #!/bin/bash -e
           if [ -d "\${ROOTFS_DIR}/home/pi/scripts" ]; then
-            echo "Host is setting executable bits for scripts in \${ROOTFS_DIR}/home/pi/scripts:"
+            echo "Host: Listing scripts in \${ROOTFS_DIR}/home/pi/scripts:"
             ls -l "\${ROOTFS_DIR}/home/pi/scripts"
           else
-            echo "Directory \${ROOTFS_DIR}/home/pi/scripts does not exist yet."
+            echo "Host: Directory \${ROOTFS_DIR}/home/pi/scripts does not exist yet."
           fi
           chmod +x "\${ROOTFS_DIR}/home/pi/scripts"/*.sh || echo "No scripts found to chmod"
           EOF
@@ -63,7 +63,7 @@ jobs:
 
           cat << 'EOF' > custom-stage/00-install-scripts/01-run-chroot
           #!/bin/bash -e
-          echo "Listing scripts in /home/pi/scripts (inside chroot):"
+          echo "Chroot: Listing scripts in /home/pi/scripts:"
           ls -l /home/pi/scripts
           cd /home/pi/scripts
           ./install_docker_raspi.sh
@@ -75,7 +75,7 @@ jobs:
           ./install_vimba.sh
           ./git_clone_imswitchconfig.sh
           ./create_desktopicons.sh
-          echo "All custom scripts executed inside chroot."
+          echo "Chroot: All custom scripts executed."
           EOF
           chmod +x custom-stage/00-install-scripts/01-run-chroot
 
@@ -89,14 +89,14 @@ jobs:
           enable-noobs: false
           enable-ssh: 1
           hostname: uc2
-          user-password: youseetoo
+          password: youseetoo
           keyboard-layout: de
           timezone: Europe/Berlin
           locale: en_US.UTF-8
-          packages: git nano 
+          extra-host-dependencies: git nano
           wpa-country: DE
-          wifi-ssid: "Blynk"
-          wifi-psk: "12345678"
+          wpa-essid: "Blynk"
+          wpa-password: "12345678"
           verbose-output: true
 
       - name: Upload image artifact
