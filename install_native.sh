@@ -66,7 +66,7 @@ export PATH=/opt/conda/bin:$PATH
 # Create conda environment and install packages
 echo "Creating conda environment and installing packages"
 conda create -y --name imswitch311 python=3.11
-conda install -n imswitch -y -c conda-forge h5py numcodecs scikit-image
+conda install -n imswitch311 -y -c conda-forge h5py numcodecs scikit-image
 conda clean --all -f -y
 
 # Clone the config folder
@@ -91,8 +91,8 @@ source /opt/conda/bin/activate imswitch311 && pip install -e ~/UC2-REST
 # source /opt/conda/bin/activate imswitch && pip install psygnal --no-binary :all:
 
 # fix the version of OME-ZARR
-source /opt/conda/bin/activate imswitch && pip install ome-zarr==0.9.0
-source /opt/conda/bin/activate imswitch && conda install -c conda-forge --strict-channel-priority numpy scikit-image==0.19.3 -y
+source /opt/conda/bin/activate imswitch311 && pip install ome-zarr==0.9.0
+source /opt/conda/bin/activate imswitch311 && conda install -c conda-forge --strict-channel-priority numpy scikit-image==0.19.3 -y
 
 # fix numpy
 source /opt/conda/bin/activate imswitch311 && python3 -m pip install numpy==1.26.4

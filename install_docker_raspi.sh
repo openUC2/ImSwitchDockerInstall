@@ -5,6 +5,10 @@ sudo apt update -y
 # Upgrade installed packages
 sudo apt upgrade -y
 
+# Ensure the system is up-to-date
+sudo apt-get install ntpdate -y
+sudo ntpdate pool.ntp.org
+
 # Check if Docker is installed
 if ! command -v docker &> /dev/null
 then
