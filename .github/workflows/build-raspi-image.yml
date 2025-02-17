@@ -1,0 +1,107 @@
+name: Build-RaspberryPi-Image
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  pi-gen-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: List files for debugging
+        run: |
+          echo "List of current directory contents:"
+          ls -la
+          echo "Listing expected scripts in repository root:"
+          ls -l create_desktopicons.sh
+          ls -l git_clone_imswitchconfig.sh
+          ls -l install_autostart.sh
+          ls -l install_dahengdriver.sh
+          ls -l install_docker_raspi.sh
+          ls -l install_hikdriver.sh
+          ls -l install_native.sh
+          ls -l install_raspap.sh
+          ls -l install_vimba.sh
+
+      - name: Prepare custom stage
+        run: |
+          mkdir -p custom-stage/00-install-scripts/files/home/pi/scripts
+          
+          cp create_desktopicons.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp git_clone_imswitchconfig.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_autostart.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_dahengdriver.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_docker_raspi.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_hikdriver.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_native.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_raspap.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          cp install_vimba.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+
+          cat << 'EOF' > custom-stage/prerun.sh
+          #!/bin/bash -e
+          if [ ! -d "${ROOTFS_DIR}" ]; then
+            copy_previous
+          fi
+          EOF
+          chmod +x custom-stage/prerun.sh
+
+          cat << 'EOF' > custom-stage/00-install-scripts/00-run.sh
+          #!/bin/bash -e
+          if [ -d "\${ROOTFS_DIR}/home/pi/scripts" ]; then
+            echo "Host: Listing scripts in \${ROOTFS_DIR}/home/pi/scripts:"
+            ls -l "\${ROOTFS_DIR}/home/pi/scripts"
+          else
+            echo "Host: Directory \${ROOTFS_DIR}/home/pi/scripts does not exist yet."
+          fi
+          chmod +x "\${ROOTFS_DIR}/home/pi/scripts"/*.sh || echo "No scripts found to chmod"
+          EOF
+          chmod +x custom-stage/00-install-scripts/00-run.sh
+
+          cat << 'EOF' > custom-stage/00-install-scripts/01-run-chroot
+          #!/bin/bash -e
+          echo "Chroot: Listing scripts in /home/pi/scripts:"
+          ls -l /home/pi/scripts
+          cd /home/pi/scripts
+          ./install_docker_raspi.sh
+          ./install_native.sh
+          ./install_autostart.sh
+          ./install_raspap.sh
+          ./install_dahengdriver.sh
+          ./install_hikdriver.sh
+          ./install_vimba.sh
+          ./git_clone_imswitchconfig.sh
+          ./create_desktopicons.sh
+          echo "Chroot: All custom scripts executed."
+          EOF
+          chmod +x custom-stage/00-install-scripts/01-run-chroot
+
+      - name: Run pi-gen
+        id: build
+        uses: usimd/pi-gen-action@v1
+        with:
+          image-name: imswitch-raspi-lite
+          stage-list: stage0 stage1 stage2 ./custom-stage
+          disable-first-boot-user-rename: 0
+          enable-noobs: false
+          enable-ssh: 1
+          hostname: uc2
+          password: youseetoo
+          keyboard-layout: de
+          timezone: Europe/Berlin
+          locale: en_US.UTF-8
+          extra-host-dependencies: git nano
+          wpa-country: DE
+          wpa-essid: "Blynk"
+          wpa-password: "12345678"
+          verbose-output: true
+
+      - name: Upload image artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: raspios-custom-image
+          path: pi-gen/deploy/*
