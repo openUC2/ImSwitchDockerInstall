@@ -29,18 +29,21 @@ jobs:
 
       - name: Prepare custom stage
         run: |
-          mkdir -p custom-stage/00-install-scripts/files/home/pi/scripts
-          
-          cp create_desktopicons.sh custom-stage/00-install-scripts/files/home/pi/scripts/
-          cp git_clone_imswitchconfig.sh custom-stage/00-install-scripts/files/home/pi/scripts/
-          cp install_autostart.sh custom-stage/00-install-scripts/files/home/pi/scripts/
-          cp install_dahengdriver.sh custom-stage/00-install-scripts/files/home/pi/scripts/
-          cp install_docker_raspi.sh custom-stage/00-install-scripts/files/home/pi/scripts/
-          cp install_hikdriver.sh custom-stage/00-install-scripts/files/home/pi/scripts/
-          cp install_native.sh custom-stage/00-install-scripts/files/home/pi/scripts/
-          cp install_raspap.sh custom-stage/00-install-scripts/files/home/pi/scripts/
-          cp install_vimba.sh custom-stage/00-install-scripts/files/home/pi/scripts/
+          # 1) Create a sub-stage folder with a numeric prefix, e.g. 01-install-scripts
+          mkdir -p custom-stage/01-install-scripts/files/home/pi/scripts
 
+          # 2) Copy your scripts into that files/ directory
+          cp create_desktopicons.sh       custom-stage/01-install-scripts/files/home/pi/scripts/
+          cp git_clone_imswitchconfig.sh  custom-stage/01-install-scripts/files/home/pi/scripts/
+          cp install_autostart.sh         custom-stage/01-install-scripts/files/home/pi/scripts/
+          cp install_dahengdriver.sh      custom-stage/01-install-scripts/files/home/pi/scripts/
+          cp install_docker_raspi.sh      custom-stage/01-install-scripts/files/home/pi/scripts/
+          cp install_hikdriver.sh         custom-stage/01-install-scripts/files/home/pi/scripts/
+          cp install_native.sh            custom-stage/01-install-scripts/files/home/pi/scripts/
+          cp install_raspap.sh            custom-stage/01-install-scripts/files/home/pi/scripts/
+          cp install_vimba.sh             custom-stage/01-install-scripts/files/home/pi/scripts/
+
+          # 3) prerun.sh at the stage level, so pi-gen copies from the previous stage's rootfs:
           cat << 'EOF' > custom-stage/prerun.sh
           #!/bin/bash -e
           if [ ! -d "${ROOTFS_DIR}" ]; then
@@ -49,19 +52,22 @@ jobs:
           EOF
           chmod +x custom-stage/prerun.sh
 
-          cat << 'EOF' > custom-stage/00-install-scripts/00-run.sh
+          # 4) Create 00-run.sh for host commands (after files/ is copied)
+          cat << 'EOF' > custom-stage/01-install-scripts/00-run.sh
           #!/bin/bash -e
+          echo "Host: Checking for /home/pi/scripts in \${ROOTFS_DIR}..."
           if [ -d "\${ROOTFS_DIR}/home/pi/scripts" ]; then
-            echo "Host: Listing scripts in \${ROOTFS_DIR}/home/pi/scripts:"
+            echo "Host: Found scripts, making them executable:"
             ls -l "\${ROOTFS_DIR}/home/pi/scripts"
+            chmod +x "\${ROOTFS_DIR}/home/pi/scripts"/*.sh
           else
-            echo "Host: Directory \${ROOTFS_DIR}/home/pi/scripts does not exist yet."
+            echo "Host: Directory \${ROOTFS_DIR}/home/pi/scripts does not exist!"
           fi
-          chmod +x "\${ROOTFS_DIR}/home/pi/scripts"/*.sh || echo "No scripts found to chmod"
           EOF
-          chmod +x custom-stage/00-install-scripts/00-run.sh
+          chmod +x custom-stage/01-install-scripts/00-run.sh
 
-          cat << 'EOF' > custom-stage/00-install-scripts/01-run-chroot
+          # 5) Create 01-run-chroot for inside the target filesystem
+          cat << 'EOF' > custom-stage/01-install-scripts/01-run-chroot
           #!/bin/bash -e
           echo "Chroot: Listing scripts in /home/pi/scripts:"
           ls -l /home/pi/scripts
@@ -77,13 +83,14 @@ jobs:
           ./create_desktopicons.sh
           echo "Chroot: All custom scripts executed."
           EOF
-          chmod +x custom-stage/00-install-scripts/01-run-chroot
+          chmod +x custom-stage/01-install-scripts/01-run-chroot
 
       - name: Run pi-gen
         id: build
         uses: usimd/pi-gen-action@v1
         with:
           image-name: imswitch-raspi-lite
+          # We append our custom-stage AFTER stage2
           stage-list: stage0 stage1 stage2 ./custom-stage
           disable-first-boot-user-rename: 0
           enable-noobs: false
