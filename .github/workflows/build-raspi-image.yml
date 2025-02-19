@@ -12,11 +12,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: List files for debugging
+      - name: List top-level repo files
         run: |
-          echo "List of current directory contents:"
+          echo "Repository root contents:"
           ls -la
-          echo "Listing expected scripts in repository root:"
+          echo "Expected scripts in repository root:"
           ls -l create_desktopicons.sh
           ls -l git_clone_imswitchconfig.sh
           ls -l install_autostart.sh
@@ -29,10 +29,11 @@ jobs:
 
       - name: Prepare custom stage
         run: |
-          # 1) Create a sub-stage folder with a numeric prefix, e.g. 01-install-scripts
+          # 1) Make a sub-stage folder named "01-install-scripts"
           mkdir -p custom-stage/01-install-scripts/files/home/pi/scripts
 
           # 2) Copy your scripts into that files/ directory
+          echo "Copying scripts into custom-stage/01-install-scripts/files/home/pi/scripts"
           cp create_desktopicons.sh       custom-stage/01-install-scripts/files/home/pi/scripts/
           cp git_clone_imswitchconfig.sh  custom-stage/01-install-scripts/files/home/pi/scripts/
           cp install_autostart.sh         custom-stage/01-install-scripts/files/home/pi/scripts/
@@ -43,35 +44,44 @@ jobs:
           cp install_raspap.sh            custom-stage/01-install-scripts/files/home/pi/scripts/
           cp install_vimba.sh             custom-stage/01-install-scripts/files/home/pi/scripts/
 
-          # 3) prerun.sh at the stage level, so pi-gen copies from the previous stage's rootfs:
+          echo "Contents of custom-stage/01-install-scripts/files/home/pi/scripts:"
+          ls -la custom-stage/01-install-scripts/files/home/pi/scripts
+
+          # 3) The main "prerun.sh" for this custom stage: ensures we copy from the previous stage
           cat << 'EOF' > custom-stage/prerun.sh
           #!/bin/bash -e
+          echo "=== Running prerun.sh for custom-stage ==="
           if [ ! -d "${ROOTFS_DIR}" ]; then
+            echo "prerun: calling copy_previous because ${ROOTFS_DIR} doesn't exist"
             copy_previous
+          else
+            echo "prerun: ${ROOTFS_DIR} already exists, no copy_previous needed"
           fi
           EOF
           chmod +x custom-stage/prerun.sh
 
-          # 4) Create 00-run.sh for host commands (after files/ is copied)
+          # 4) Create 00-run.sh for host commands (after files/ is copied in)
           cat << 'EOF' > custom-stage/01-install-scripts/00-run.sh
           #!/bin/bash -e
-          echo "Host: Checking for /home/pi/scripts in \${ROOTFS_DIR}..."
+          echo "=== Host: Checking if /home/pi/scripts exists in \${ROOTFS_DIR} ==="
           if [ -d "\${ROOTFS_DIR}/home/pi/scripts" ]; then
-            echo "Host: Found scripts, making them executable:"
+            echo "Host: Found /home/pi/scripts, making them executable..."
             ls -l "\${ROOTFS_DIR}/home/pi/scripts"
             chmod +x "\${ROOTFS_DIR}/home/pi/scripts"/*.sh
           else
-            echo "Host: Directory \${ROOTFS_DIR}/home/pi/scripts does not exist!"
+            echo "Host: ERROR - Directory \${ROOTFS_DIR}/home/pi/scripts does not exist!"
           fi
           EOF
           chmod +x custom-stage/01-install-scripts/00-run.sh
 
-          # 5) Create 01-run-chroot for inside the target filesystem
+          # 5) Create 01-run-chroot for inside the target
           cat << 'EOF' > custom-stage/01-install-scripts/01-run-chroot
           #!/bin/bash -e
-          echo "Chroot: Listing scripts in /home/pi/scripts:"
-          ls -l /home/pi/scripts
-          cd /home/pi/scripts
+          echo "=== Chroot: Listing /home/pi/scripts: ==="
+          ls -l /home/pi/scripts || echo "Chroot: /home/pi/scripts not found!"
+          cd /home/pi/scripts || exit 0
+
+          echo "=== Executing scripts inside chroot ==="
           ./install_docker_raspi.sh
           ./install_native.sh
           ./install_autostart.sh
@@ -81,17 +91,25 @@ jobs:
           ./install_vimba.sh
           ./git_clone_imswitchconfig.sh
           ./create_desktopicons.sh
-          echo "Chroot: All custom scripts executed."
+          echo "=== Chroot: All custom scripts executed. ==="
           EOF
           chmod +x custom-stage/01-install-scripts/01-run-chroot
+
+          # Optional debugging: show entire layout of the custom stage
+          echo "=== Debug: full layout of custom-stage ==="
+          ls -R custom-stage
 
       - name: Run pi-gen
         id: build
         uses: usimd/pi-gen-action@v1
         with:
+          # This name will appear in the final image
           image-name: imswitch-raspi-lite
-          # We append our custom-stage AFTER stage2
+
+          # The official stages are stage0, stage1, stage2, etc.
+          # We append our custom-stage at the end:
           stage-list: stage0 stage1 stage2 ./custom-stage
+
           disable-first-boot-user-rename: 0
           enable-noobs: false
           enable-ssh: 1
@@ -100,7 +118,10 @@ jobs:
           keyboard-layout: de
           timezone: Europe/Berlin
           locale: en_US.UTF-8
+
+          # You need "git" and "nano" installed on the build host for your custom scripts
           extra-host-dependencies: git nano
+
           wpa-country: DE
           wpa-essid: "Blynk"
           wpa-password: "12345678"
