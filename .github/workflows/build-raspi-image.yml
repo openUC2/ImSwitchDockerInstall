@@ -17,14 +17,44 @@ jobs:
           echo "==== Top-level contents ===="
           ls -la
           echo "==== Known scripts in root ===="
-          ls -l create_desktopicons.sh git_clone_imswitchconfig.sh install_*sh
+          ls -l create_desktopicons.sh \
+                git_clone_imswitchconfig.sh \
+                install_autostart.sh \
+                install_dahengdriver.sh \
+                install_docker_raspi.sh \
+                install_hikdriver.sh \
+                install_native.sh \
+                install_raspap.sh \
+                install_vimba.sh
 
-      - name: Create custom stage
+      - name: Prepare custom stage
         run: |
-          # 1) Make the custom-stage folder
-          mkdir -p custom-stage/package-scripts
+          #
+          # 1) Create custom-stage folder
+          #
+          mkdir -p custom-stage/package-scripts/files/usr/local/scripts
 
-          # 2) Create 'prerun.sh' in custom-stage (runs on host before the chroot is set up)
+          #
+          # 2) Copy scripts into package-scripts/files/usr/local/scripts
+          #    so pi-gen automatically copies them to /usr/local/scripts
+          #    inside the target filesystem.
+          #
+          cp create_desktopicons.sh            custom-stage/package-scripts/files/usr/local/scripts/
+          cp git_clone_imswitchconfig.sh       custom-stage/package-scripts/files/usr/local/scripts/
+          cp install_autostart.sh              custom-stage/package-scripts/files/usr/local/scripts/
+          cp install_dahengdriver.sh           custom-stage/package-scripts/files/usr/local/scripts/
+          cp install_docker_raspi.sh           custom-stage/package-scripts/files/usr/local/scripts/
+          cp install_hikdriver.sh              custom-stage/package-scripts/files/usr/local/scripts/
+          cp install_native.sh                 custom-stage/package-scripts/files/usr/local/scripts/
+          cp install_raspap.sh                 custom-stage/package-scripts/files/usr/local/scripts/
+          cp install_vimba.sh                  custom-stage/package-scripts/files/usr/local/scripts/
+
+          echo "==== Custom stage layout (before prerun & run-chroot) ===="
+          find custom-stage
+
+          #
+          # 3) prerun.sh runs on the host before chroot
+          #
           cat << 'EOF' > custom-stage/prerun.sh
           #!/bin/bash -e
           echo "=== custom-stage/prerun.sh: Checking if ${ROOTFS_DIR} is present ==="
@@ -37,57 +67,45 @@ jobs:
           EOF
           chmod +x custom-stage/prerun.sh
 
-          # 3) Create '00-run-chroot.sh' in package-scripts (this runs inside the Pi's OS)
-          cat << 'EOF' > custom-stage/package-scripts/00-run-chroot.sh
-          #!/bin/bash
-          set -e
+          #
+          # 4) Create 00-run-chroot in package-scripts (runs INSIDE the Pi image)
+          #
+          cat << 'EOF' > custom-stage/package-scripts/00-run-chroot
+          #!/bin/bash -e
+          echo "=== 00-run-chroot: We are now inside the target filesystem ==="
 
-          echo "=== 00-run-chroot.sh: Running inside the Pi image (chroot) ==="
-          # We'll put any apt-get installs or environment tweaks here:
+          # If needed, apt-get install anything for your scripts
           apt-get update -y
-          apt-get install -y curl git  # example of extra packages for your scripts
+          apt-get install -y git nano curl  # example
 
-          # EXAMPLE: Copy your scripts from the *host* into /root/scripts and run them
-          # Approach A) We simply curl them from GitHub one by one:
-          # (uncomment if you prefer curling them)
-          # cd /root
-          # curl -O https://raw.githubusercontent.com/<user>/<repo>/main/install_docker_raspi.sh
-          # curl -O https://raw.githubusercontent.com/<user>/<repo>/main/install_autostart.sh
-          # chmod +x *.sh
-          # ./install_docker_raspi.sh
-          # ./install_autostart.sh
-          # ...
-          
-          # Approach B) Inline the relevant script lines here, if they're short
-          # or "sed" them out of /boot, or any number of ways to get them in.
+          # Make scripts executable and run them:
+          echo "=== Making /usr/local/scripts/*.sh executable ==="
+          chmod +x /usr/local/scripts/*.sh
 
-          # For demonstration, let's do something like:
-          echo "=== 00-run-chroot.sh: Cloning your Git repo so we can run scripts ==="
-          cd /tmp
-          git clone https://github.com/<user>/<repo>.git my-scripts
-          cd my-scripts
-          chmod +x install_docker_raspi.sh install_autostart.sh
-          echo "=== 00-run-chroot.sh: Running your scripts now ==="
+          echo "=== Running your scripts in order ==="
+          cd /usr/local/scripts
           ./install_docker_raspi.sh
+          ./install_native.sh
           ./install_autostart.sh
-          # etc.
+          ./install_raspap.sh
+          ./install_dahengdriver.sh
+          ./install_hikdriver.sh
+          ./install_vimba.sh
+          ./git_clone_imswitchconfig.sh
+          ./create_desktopicons.sh
 
-          echo "=== Done running custom scripts inside chroot. ==="
+          echo "=== Done executing custom scripts inside chroot ==="
           EOF
-          chmod +x custom-stage/package-scripts/00-run-chroot.sh
-
-          # Debug: show final layout
-          echo "=== custom-stage folder layout ==="
-          tree custom-stage
+          chmod +x custom-stage/package-scripts/00-run-chroot
 
       - name: Run pi-gen
         id: build
         uses: usimd/pi-gen-action@v1
         with:
-          # The base name for the final image
+          # The final image name
           image-name: imswitch-raspi-lite
 
-          # Run official stages + your custom stage
+          # We'll run stage0..2, then our custom-stage
           stage-list: stage0 stage1 stage2 ./custom-stage
 
           # Basic config
