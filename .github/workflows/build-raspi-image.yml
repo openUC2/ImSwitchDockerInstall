@@ -98,6 +98,14 @@ jobs:
           EOF
           chmod +x custom-stage/package-scripts/00-run-chroot
 
+      - name: Create swap file (4GB)
+        run: |
+          sudo fallocate -l 4G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+        shell: bash
+        
       - name: Run pi-gen
         id: build
         uses: usimd/pi-gen-action@v1
@@ -122,6 +130,8 @@ jobs:
           wpa-essid: "Blynk"
           wpa-password: "12345678"
           verbose-output: true
+          increase-runner-disk-size: true
+
 
       - name: Upload image artifact
         if: ${{ success() }}
