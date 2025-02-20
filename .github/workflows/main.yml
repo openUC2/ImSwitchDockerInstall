@@ -1,4 +1,4 @@
-name: Build and publish imswitch images  workflow_dispatch:
+name: Build and publish imswitch images  
 
 permissions:
   contents: write
