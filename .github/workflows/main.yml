@@ -22,19 +22,11 @@ jobs:
           {
           cat > stage-imswitch/package-imswitch/00-run-chroot.sh <<-EOF
           #!/bin/bash
+          apt-get update && apt-get install -y git
           git clone https://github.com/openUC2/ImSwitchDockerInstall
           cd ImSwitchDockerInstall
           chmod +x install_all.sh
           ./install_all.sh
-          EOF
-          } &&
-          chmod +x stage-imswitch/package-imswitch/00-run-chroot.sh &&
-          {
-          cat > stage-imswitch/prerun.sh <<-EOF
-          #!/bin/bash -e
-          if [ ! -d "\${ROOTFS_DIR}" ]; then
-            copy_previous
-          fi
           EOF
           } &&
           chmod +x stage-imswitch/package-imswitch/00-run-chroot.sh &&
