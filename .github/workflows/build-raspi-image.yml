@@ -105,6 +105,13 @@ jobs:
           echo "=== custom-stage folder layout ==="
           find custom-stage
 
+      - name: Create swap file (4GB)
+        run: |
+          sudo fallocate -l 4G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
       #
       # 4) Run pi-gen with your new custom stage appended
       #
@@ -135,8 +142,8 @@ jobs:
           wpa-password: "12345678"
           verbose-output: true
           # If you see memory errors:
-          #   increase-runner-disk-size: true
-          #   (and consider a swap step)
+          increase-runner-disk-size: true
+          
 
       #
       # 5) Upload the final image from the deploy folder
