@@ -1,0 +1,83 @@
+name: Build and publish imswitch images
+
+permissions:
+  contents: write
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-imswitch-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Add imswitch Stage
+        run: |
+          mkdir -p stage-imswitch/package-imswitch &&
+          {
+          cat > stage-imswitch/package-imswitch/00-run-chroot.sh <<-EOF
+          #!/bin/bash
+          git clone https://github.com/openUC2/ImSwitchDockerInstall
+          cd ImSwitchDockerInstall
+          chmod +x install_all.sh
+          ./install_all.sh
+          EOF
+          } &&
+          chmod +x stage-imswitch/package-imswitch/00-run-chroot.sh &&
+          {
+          cat > stage-imswitch/prerun.sh <<-EOF
+          #!/bin/bash -e
+          if [ ! -d "\${ROOTFS_DIR}" ]; then
+            copy_previous
+          fi
+          EOF
+          } &&
+          chmod +x stage-imswitch/package-imswitch/00-run-chroot.sh &&
+          {
+          cat > stage-imswitch/prerun.sh <<-EOF
+          #!/bin/bash -e
+          if [ ! -d "\${ROOTFS_DIR}" ]; then
+            copy_previous
+          fi
+          EOF
+          } &&
+          chmod +x stage-imswitch/prerun.sh
+
+      - name: Build imswitch Image
+        id: build
+        uses: usimd/pi-gen-action@v1
+        with:
+          enable-ssh: 1
+          stage-list: stage0 stage1 stage2 ./stage-imswitch
+          verbose-output: true
+          image-name: imswitch-raspi-lite
+          # Basic config
+          disable-first-boot-user-rename: 0
+          enable-noobs: false
+          hostname: uc2
+          password: youseetoo
+          keyboard-layout: de
+          timezone: Europe/Berlin
+          locale: en_US.UTF-8
+
+          # If your scripts need e.g. parted or other build-host packages, add them here
+          extra-host-dependencies: git nano
+
+          wpa-country: DE
+          wpa-essid: "Blynk"
+          wpa-password: "12345678"
+          
+          # If you see memory errors:
+          increase-runner-disk-size: true
+
+      - name: Upload Artifact
+        uses: svenstaro/upload-release-action@v2
+        with:
+          asset_name: "imswitch-bookworm.img.zip"
+          file: ${{ steps.build.outputs.image-path }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.event.inputs.tag || github.ref }}
+          overwrite: true
