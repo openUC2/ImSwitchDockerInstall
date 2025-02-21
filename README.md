@@ -45,7 +45,12 @@ chmod +x uninstall_service.sh
 ./uninstall_service.sh
 ```
 
-## Install Filegator
+## Quickstart Docker on AMD/ARM
+
 ```
-sudo docker run -d -p 8080:8080 -v my_volume:/home/uc2/ImSwitchConfig/recordings --name filegator filegator/filegator:v7.9.2-multiarch
+sudo docker run -it --rm -p 8001:8001 -p 8003:8002 -p 2222:22 -p 8889:8888 -e HEADLESS=1 -e HTTP_PORT=8001 -e C ONFIG_FILE=example_virtual_microscope.json -e UPDATE_GIT=0 -e UPDATE_CONFIG=0 -v ~/:/config -e CONFIG_PATH=/config -e ssl=0  --privileged ghcr.io/openuc2/imswitch-noqt-amd64:latest
+```
+
+```
+sudo docker run -it --rm -p 8001:8001 -p 8003:8002 -p 2222:22 -p 8889:8888 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_virtual_microscope.json -e UPDATE_GIT=0 -e UPDATE_CONFIG=0 -v ~/:/config -e CONFIG_PATH=/config -e ssl=0  --privilege d ghcr.io/openuc2/imswitch-noqt-arm64:latest
 ```
