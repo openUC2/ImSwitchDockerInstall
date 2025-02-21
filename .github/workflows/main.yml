@@ -22,29 +22,16 @@ jobs:
           {
           cat > stage-imswitch/package-imswitch/00-run-chroot.sh <<-EOF
           
-          #!/bin/sh
-          exit 101
-          EOF
-          chmod +x /usr/sbin/policy-rc.d
-
-          # Silence warnings about host name resolution
-          echo "127.0.0.1 $(hostname)" >> /etc/hosts
-
-          # Non-interactive package installs
-          export DEBIAN_FRONTEND=noninteractive
-
-          apt-get update && apt-get install -y git nano sudo
-
-          # Clone and run your scripts
+          #!/bin/bash
+          
+          # Ensure Git is installed before cloning
+          apt-get update && apt-get install -y git nano
+          
           git clone https://github.com/openUC2/ImSwitchDockerInstall
           cd ImSwitchDockerInstall
-
           chmod +x install_all_pigen.sh
           ./install_all_pigen.sh
-
-          # Remove policy-rc.d so that on the final system, services can start
-          rm /usr/sbin/policy-rc.d
-
+          
           exit 0
           EOF
           } &&
@@ -58,7 +45,6 @@ jobs:
           EOF
           } &&
           chmod +x stage-imswitch/prerun.sh
-
       - name: Build imswitch Image
         id: build
         uses: usimd/pi-gen-action@v1
