@@ -32,24 +32,22 @@ jobs:
           chmod +x install_all.sh
           ./install_all.sh
           
-          # Ensure all processes are terminated before exiting
-          killall -9 -q -w bash || true
+          # Fix the 'ehco' typo to 'echo' inside install_all.sh if present
+          sed -i 's/ehco/echo/g' install_all.sh || true
           
-          # Unmount stuck mount points
-          umount -lf /dev || true
-          umount -lf /run || true
+          # Remove calls that can break the pi-gen build while in chroot:
+          #  - Systemd commands (systemctl)
+          #  - forced unmounts of /dev and /run
+          #  - killall bash
+          #  - setenforce
+          #  - fuser usage
+          # Because pi-gen already unmounts on its own.
           
-          # Stop background services that may be holding resources
-          systemctl stop systemd-udevd || true
-          systemctl stop systemd-journald || true
+          # If RaspAP or hostapd installation triggers errors, consider adjusting the script
+          # to skip or delay these steps until first boot.
           
-          # Disable SELinux if enabled
-          setenforce 0 || true
-          
-          # Log processes holding mounts
-          fuser -mv /pi-gen/work/imswitch-raspi-lite/stage-imswitch/rootfs/dev
-          fuser -mv /pi-gen/work/imswitch-raspi-lite/stage-imswitch/rootfs/run
-          
+          exit 0
+
           EOF
           } &&
           chmod +x stage-imswitch/package-imswitch/00-run-chroot.sh &&
