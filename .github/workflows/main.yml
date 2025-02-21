@@ -22,32 +22,30 @@ jobs:
           {
           cat > stage-imswitch/package-imswitch/00-run-chroot.sh <<-EOF
           
-          #!/bin/bash
-          
-          # Ensure Git is installed before cloning
-          apt-get update && apt-get install -y git nano
-          
+          #!/bin/sh
+          exit 101
+          EOF
+          chmod +x /usr/sbin/policy-rc.d
+
+          # Silence warnings about host name resolution
+          echo "127.0.0.1 $(hostname)" >> /etc/hosts
+
+          # Non-interactive package installs
+          export DEBIAN_FRONTEND=noninteractive
+
+          apt-get update && apt-get install -y git nano sudo
+
+          # Clone and run your scripts
           git clone https://github.com/openUC2/ImSwitchDockerInstall
           cd ImSwitchDockerInstall
-          chmod +x install_all.sh
-          ./install_all.sh
-          
-          # Fix the 'ehco' typo to 'echo' inside install_all.sh if present
-          sed -i 's/ehco/echo/g' install_all.sh || true
-          
-          # Remove calls that can break the pi-gen build while in chroot:
-          #  - Systemd commands (systemctl)
-          #  - forced unmounts of /dev and /run
-          #  - killall bash
-          #  - setenforce
-          #  - fuser usage
-          # Because pi-gen already unmounts on its own.
-          
-          # If RaspAP or hostapd installation triggers errors, consider adjusting the script
-          # to skip or delay these steps until first boot.
-          
-          exit 0
 
+          chmod +x install_all_pigen.sh
+          ./install_all_pigen.sh
+
+          # Remove policy-rc.d so that on the final system, services can start
+          rm /usr/sbin/policy-rc.d
+
+          exit 0
           EOF
           } &&
           chmod +x stage-imswitch/package-imswitch/00-run-chroot.sh &&
