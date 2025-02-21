@@ -18,41 +18,62 @@ jobs:
 
       - name: Add imswitch Stage
         run: |
-          mkdir -p stage-imswitch/package-imswitch &&
-          {
-          cat > stage-imswitch/package-imswitch/00-run-chroot.sh <<-EOF
+          mkdir -p stage-imswitch/package-imswitch
+          # Create depends file so pi-gen knows this stage depends on stage2
+          echo "2" > stage-imswitch/depends
+      
+          cat > stage-imswitch/package-imswitch/00-run-chroot.sh << 'EOF'
+          #!/bin/bash -e
           
-          #!/bin/bash
+          # --------------------------------------------------------------------
+          # 1. Stop services from auto-starting in chroot
+          # --------------------------------------------------------------------
+          cat << 'POLICYRC' > /usr/sbin/policy-rc.d
+          #!/bin/sh
+          exit 101
+          POLICYRC
+          chmod +x /usr/sbin/policy-rc.d
           
-          # Ensure Git is installed before cloning
-          apt-get update && apt-get install -y git nano
+          # --------------------------------------------------------------------
+          # 2. Fix hostname resolution warnings (sudo: unable to resolve host ...)
+          # --------------------------------------------------------------------
+          echo "127.0.0.1 $(hostname)" >> /etc/hosts
           
+          # --------------------------------------------------------------------
+          # 3. Ensure non-interactive debconf
+          # --------------------------------------------------------------------
+          export DEBIAN_FRONTEND=noninteractive
+          
+          # --------------------------------------------------------------------
+          # 4. Install dependencies (pip3, git, nano, etc.)
+          # --------------------------------------------------------------------
+          apt-get update && apt-get install -y git nano python3-pip
+          
+          # --------------------------------------------------------------------
+          # 5. Clone and run the install script
+          # --------------------------------------------------------------------
           git clone https://github.com/openUC2/ImSwitchDockerInstall
           cd ImSwitchDockerInstall
           chmod +x install_all_pigen.sh
           ./install_all_pigen.sh
           
+          # --------------------------------------------------------------------
+          # 6. Remove policy-rc.d so final system can start services on boot
+          # --------------------------------------------------------------------
+          rm /usr/sbin/policy-rc.d
+          
           exit 0
           EOF
-          } &&
-          chmod +x stage-imswitch/package-imswitch/00-run-chroot.sh &&
-          {
-          cat > stage-imswitch/prerun.sh <<-EOF
+          
+              chmod +x stage-imswitch/package-imswitch/00-run-chroot.sh
+          
+              cat > stage-imswitch/prerun.sh << 'EOF'
           #!/bin/bash -e
-          if [ ! -d "\${ROOTFS_DIR}" ]; then
+          if [ ! -d "${ROOTFS_DIR}" ]; then
             copy_previous
           fi
           EOF
-          } &&
-          chmod +x stage-imswitch/package-imswitch/00-run-chroot.sh &&
-          {
-          cat > stage-imswitch/prerun.sh <<-EOF
-          #!/bin/bash -e
-          if [ ! -d "\${ROOTFS_DIR}" ]; then
-            copy_previous
-          fi
-          EOF
-          } &&
+      
           chmod +x stage-imswitch/prerun.sh
       - name: Build imswitch Image
         id: build
