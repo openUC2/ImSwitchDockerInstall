@@ -21,12 +21,35 @@ jobs:
           mkdir -p stage-imswitch/package-imswitch &&
           {
           cat > stage-imswitch/package-imswitch/00-run-chroot.sh <<-EOF
+          
           #!/bin/bash
-          apt-get update && apt-get install -y git
+          
+          # Ensure Git is installed before cloning
+          apt-get update && apt-get install -y git nano
+          
           git clone https://github.com/openUC2/ImSwitchDockerInstall
           cd ImSwitchDockerInstall
           chmod +x install_all.sh
           ./install_all.sh
+          
+          # Ensure all processes are terminated before exiting
+          killall -9 -q -w bash || true
+          
+          # Unmount stuck mount points
+          umount -lf /dev || true
+          umount -lf /run || true
+          
+          # Stop background services that may be holding resources
+          systemctl stop systemd-udevd || true
+          systemctl stop systemd-journald || true
+          
+          # Disable SELinux if enabled
+          setenforce 0 || true
+          
+          # Log processes holding mounts
+          fuser -mv /pi-gen/work/imswitch-raspi-lite/stage-imswitch/rootfs/dev
+          fuser -mv /pi-gen/work/imswitch-raspi-lite/stage-imswitch/rootfs/run
+          
           EOF
           } &&
           chmod +x stage-imswitch/package-imswitch/00-run-chroot.sh &&
