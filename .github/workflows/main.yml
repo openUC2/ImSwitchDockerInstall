@@ -44,6 +44,15 @@ jobs:
           fi
           EOF
           } &&
+          chmod +x stage-imswitch/package-imswitch/00-run-chroot.sh &&
+          {
+          cat > stage-imswitch/prerun.sh <<-EOF
+          #!/bin/bash -e
+          if [ ! -d "\${ROOTFS_DIR}" ]; then
+            copy_previous
+          fi
+          EOF
+          } &&
           chmod +x stage-imswitch/prerun.sh
       - name: Build imswitch Image
         id: build

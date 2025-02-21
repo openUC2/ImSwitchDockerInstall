@@ -46,8 +46,8 @@ chmod +x install_backgroundwallpaper.sh
 ./install_backgroundwallpaper.sh
 
 echo "Set install_autostart for ImSwitch"
-chmod +x setup_install_autostart.sh
-./setup_install_autostart.sh
+chmod +x install_autostart.sh
+./install_autostart.sh
 
 # add serial devices to user group
 sudo usermod -a -G dialout $USER
