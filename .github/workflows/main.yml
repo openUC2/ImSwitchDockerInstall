@@ -108,5 +108,5 @@ jobs:
           asset_name: "imswitch-bookworm.img.zip"
           file: ${{ steps.build.outputs.image-path }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.event.inputs.tag || github.ref }}
+          tag: imswitch-${{ github.event.inputs.tag || github.ref }}
           overwrite: true
