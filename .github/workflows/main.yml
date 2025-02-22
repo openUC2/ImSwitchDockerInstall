@@ -54,8 +54,8 @@ jobs:
           # --------------------------------------------------------------------
           git clone https://github.com/openUC2/ImSwitchDockerInstall
           cd ImSwitchDockerInstall
-          chmod +x install_native.sh
-          ./install_native.sh
+          chmod +x install_all_pigen.sh
+          ./install_all_pigen.sh
           
           # --------------------------------------------------------------------
           # 6. Remove policy-rc.d so final system can start services on boot
