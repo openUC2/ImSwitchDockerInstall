@@ -1,4 +1,5 @@
 #!/bin/bash
+# create_desktopicons.sh
 # Define the desktop path
 DESKTOP_PATH=~/Desktop
 # if not exist, create the desktop path
