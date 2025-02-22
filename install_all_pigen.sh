@@ -28,7 +28,7 @@ echo "Create Desktop Icons"
 chmod +x create_desktopicons.sh
 ./create_desktopicons.sh
 
-echo "Set install_autostart for ImSwitch"
-chmod +x install_autostart.sh
-./install_autostart.sh
+#echo "Set install_autostart for ImSwitch"
+#chmod +x install_autostart.sh
+#./install_autostart.sh
  
