@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# install_dahengdriver.sh
 # Create the udev rules directory
 mkdir -p /etc/udev/rules.d
 

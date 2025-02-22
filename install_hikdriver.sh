@@ -1,4 +1,5 @@
 #!/bin/bash
+# install_hikdriver.sh
 # Install HIK Driver globally 
 
 cd /tmp 
