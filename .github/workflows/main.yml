@@ -15,6 +15,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Create swap file (4GB)
+        run: |
+          sudo fallocate -l 4G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+
       - name: Add imswitch Stage
         run: |
           # 1) Make the stage folder
@@ -82,12 +90,14 @@ jobs:
             https://dahengimaging.com/downloads/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip
 
           # Hik (MVS) driver zip
-          wget -O MVS_STD_V3.0.1_240902.zip \
-            https://www.hikrobotics.com/en2/source/vision/video/2024/9/3/MVS_STD_V3.0.1_240902.zip
-
-          # (Optionally, if the .deb is inside that zip, we will unzip it on first boot.
-          #  If you prefer to store an already-extracted .deb, you can do so, e.g.:
-          # wget -O MVS-3.0.1_aarch64_20240902.deb <some direct link> )
+          cd /tmp
+          wget -O /tmp/MVS_STD_V3.0.1_240902.zip \
+                      https://www.hikrobotics.com/en2/source/vision/video/2024/9/3/MVS_STD_V3.0.1_240902.zip
+          mkdir -p /tmp/MVS_STD_V3.0.1_240902
+          unzip MVS_STD_V3.0.1_240902.zip -d /tmp/MVS_STD_V3.0.1_240902
+          mv /tmp/MVS_STD_V3.0.1_240902/MVS-3.0.1_aarch64_20240902.deb MVS-3.0.1_aarch64_20240902.deb  
+          rm -r /tmp/MVS_STD_V3.0.1_240902
+          rm -r /tmp/MVS_STD_V3.0.1_240902.zip
 
           # --------------------------------------------------------------------
           # 6. Create the first_boot_setup.sh & service
@@ -235,7 +245,7 @@ jobs:
           image-name: imswitch-raspi-lite
 
           # Basic config
-          disable-first-boot-user-rename: 0
+          disable-first-boot-user-rename: 1
           enable-noobs: false
           hostname: uc2
           password: youseetoo
