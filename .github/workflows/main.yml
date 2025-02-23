@@ -38,92 +38,95 @@ jobs:
             copy_previous
           fi
           PRERUN
-                    chmod +x stage-imswitch/prerun.sh
+          chmod +x stage-imswitch/prerun.sh
 
-                    # 4) Create the main 00-run-chroot.sh script
-                    cat > stage-imswitch/package-imswitch/00-run-chroot.sh << 'EOF'
+          # 4) Create the main 00-run-chroot.sh script
+          cat > stage-imswitch/package-imswitch/00-run-chroot.sh << 'EOF'
           #!/bin/bash -e
           #
           # 00-run-chroot.sh
-          #
           # Runs in chroot during pi-gen build to:
-          # - Block services from starting
-          # - Download camera driver files into /tmp
-          # - Place a first_boot_setup.sh script and systemd unit to install them on the Pi's first boot
-          #
+          #   - Prevent services from starting
+          #   - Download camera driver files into /opt/camera-drivers
+          #   - Prepare a first-boot systemd service that installs them on real hardware
 
-          # --------------------------------------------------------------------
+          # ----------------------------------------------------------------------------
           # 1. Prevent services from auto-starting in chroot
-          # --------------------------------------------------------------------
+          # ----------------------------------------------------------------------------
           cat << 'POLICYRC' > /usr/sbin/policy-rc.d
           #!/bin/sh
           exit 101
           POLICYRC
           chmod +x /usr/sbin/policy-rc.d
 
-          # --------------------------------------------------------------------
+          # ----------------------------------------------------------------------------
           # 2. Fix hostname resolution warnings
-          # --------------------------------------------------------------------
+          # ----------------------------------------------------------------------------
           echo "127.0.0.1 $(hostname)" >> /etc/hosts
 
-          # --------------------------------------------------------------------
+          # ----------------------------------------------------------------------------
           # 3. Non-interactive debconf
-          # --------------------------------------------------------------------
+          # ----------------------------------------------------------------------------
           export DEBIAN_FRONTEND=noninteractive
 
-          # --------------------------------------------------------------------
+          # ----------------------------------------------------------------------------
           # 4. Install basic tools needed for downloading & unzipping
-          # --------------------------------------------------------------------
+          # ----------------------------------------------------------------------------
           apt-get update
           apt-get install -y git nano python3-pip wget unzip
 
-          # --------------------------------------------------------------------
-          # 5. Download camera driver files into /tmp
-          #    (They will remain in the final image at /tmp.)
-          # --------------------------------------------------------------------
-          cd /tmp
+          # ----------------------------------------------------------------------------
+          # 5. Download camera driver files into /opt/camera-drivers
+          #    (They remain in the final image at that location.)
+          # ----------------------------------------------------------------------------
+          mkdir -p /opt/camera-drivers
+          cd /opt/camera-drivers
 
-          # Daheng files
+          # --- Daheng ---
           wget -O Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz \
             https://dahengimaging.com/downloads/Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz
           wget -O Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip \
             https://dahengimaging.com/downloads/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip
 
-          # Hik (MVS) driver zip
-          cd /tmp
-          wget -O /tmp/MVS_STD_V3.0.1_240902.zip \
-                      https://www.hikrobotics.com/en2/source/vision/video/2024/9/3/MVS_STD_V3.0.1_240902.zip
-          mkdir -p /tmp/MVS_STD_V3.0.1_240902
-          unzip MVS_STD_V3.0.1_240902.zip -d /tmp/MVS_STD_V3.0.1_240902
-          mv /tmp/MVS_STD_V3.0.1_240902/MVS-3.0.1_aarch64_20240902.deb MVS-3.0.1_aarch64_20240902.deb  
-          rm -r /tmp/MVS_STD_V3.0.1_240902
-          rm -r /tmp/MVS_STD_V3.0.1_240902.zip
+          # --- Hik (MVS) driver zip ---
+          cd /opt/camera-drivers
+          wget -O MVS_STD_V3.0.1_240902.zip \
+            https://www.hikrobotics.com/en2/source/vision/video/2024/9/3/MVS_STD_V3.0.1_240902.zip
 
-          # --------------------------------------------------------------------
-          # 6. Create the first_boot_setup.sh & service
-          #    This will run on the Pi, not in chroot.
-          # --------------------------------------------------------------------
+
+          mkdir -p /opt/camera-drivers/MVS_STD_V3.0.1_240902
+          unzip MVS_STD_V3.0.1_240902.zip -d /opt/camera-drivers/MVS_STD_V3.0.1_240902
+          mv /opt/camera-drivers/MVS_STD_V3.0.1_240902/MVS-3.0.1_aarch64_20240902.deb /opt/camera-drivers/MVS-3.0.1_aarch64_20240902.deb
+          rm -r /opt/camera-drivers/MVS_STD_V3.0.1_240902
+          rm -r /opt/camera-drivers/MVS_STD_V3.0.1_240902.zip
+
+          # ----------------------------------------------------------------------------
+          # 6. Create first_boot_setup.sh & service
+          # ----------------------------------------------------------------------------
 
           cat << 'FIRSTBOOT' > /usr/local/bin/first_boot_setup.sh
           #!/bin/bash -e
           #
           # first_boot_setup.sh
-          # Runs once on the Pi at first boot to install camera drivers
-          # from /tmp, set environment vars, create desktop scripts, etc.
+          # Runs exactly once on the real Pi to install camera drivers from /opt/camera-drivers.
 
-          echo "[FIRST BOOT] Installing camera drivers from /tmp..."
+          echo "[FIRST BOOT] Installing camera drivers from /opt/camera-drivers..."
+
+          # Directory where we stored them in chroot
+          DRIVER_DIR="/opt/camera-drivers"
 
           # A) Install HIK/MVS driver
-          cd /tmp
-          unzip MVS_STD_V3.0.1_240902.zip || true
-          # If the .deb is inside the unzipped folder:
-          if [ -f /tmp/MVS-3.0.1_aarch64_20240902.deb ]; then
-            dpkg -i /tmp/MVS-3.0.1_aarch64_20240902.deb || true
+          cd "$DRIVER_DIR"
+          # Check if .deb is inside the unzipped folder:
+          if [ -f MVS-3.0.1_aarch64_20240902.deb ]; then
+            dpkg -i MVS-3.0.1_aarch64_20240902.deb || true
+            # Optionally remove the .deb after install if you like
+            # rm -f MVS-3.0.1_aarch64_20240902.deb
           else
-            echo "MVS .deb not found after unzip!"
+            echo "[WARN] MVS .deb not found after unzipping. Check folder contents."
           fi
 
-          # Copy GrabImage.py if present
+          # If the MVS install has a GrabImage.py
           if [ -d /opt/MVS/Samples/aarch64/Python/ ]; then
             cd /opt/MVS/Samples/aarch64/Python/
             cp GrabImage/GrabImage.py MvImport/GrabImage.py || true
@@ -135,33 +138,34 @@ jobs:
 
           # B) Install Daheng driver
           echo "[FIRST BOOT] Installing Daheng driver..."
-          cd /tmp
+          cd "$DRIVER_DIR"
           unzip Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip || true
           tar -zxvf Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz || true
 
-          cd /tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202
+          cd $DRIVER_DIR/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202
           chmod +x Galaxy_camera.run
 
-          # Build and install the Python API
-          cd /tmp/Galaxy_Linux_Python_2.0.2106.9041/api
+          # Build & install the Python API
+          cd $DRIVER_DIR/Galaxy_Linux_Python_2.0.2106.9041/api
           python3 setup.py build
           python3 setup.py install
 
-          # Run the Daheng installer (auto-enter)
-          echo "Y En Y" | /tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202/Galaxy_camera.run || true
+          # Auto-enter the Daheng run script
+          echo "Y En Y" | $DRIVER_DIR/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202/Galaxy_camera.run || true
 
           # Set library path
-          echo 'export LD_LIBRARY_PATH=/usr/lib:/tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202:$LD_LIBRARY_PATH' >> /etc/profile
+          echo 'export LD_LIBRARY_PATH=/usr/lib:'$DRIVER_DIR'/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202:$LD_LIBRARY_PATH' >> /etc/profile
 
-          # Install Python packages
+          # Install extra Python packages
           pip3 install pillow numpy
 
-          #-----------------------------------------
-          # Desktop setup for user 'pi'
-          #-----------------------------------------
+          # ---------------------------------------
+          # Create Desktop for user 'pi'
+          # ---------------------------------------
           USER_HOME="/home/pi"
           DESKTOP_PATH="$USER_HOME/Desktop"
           DOWNLOADS_PATH="$USER_HOME/Downloads"
+
           mkdir -p "$DESKTOP_PATH" "$DOWNLOADS_PATH"
           chown -R pi:pi "$DESKTOP_PATH" "$DOWNLOADS_PATH"
 
@@ -188,23 +192,22 @@ jobs:
             --privileged ghcr.io/openuc2/imswitch-noqt-arm64:latest
           SCRIPT2
 
-          chmod +x "$DESKTOP_PATH/update_docker_container.sh" "$DESKTOP_PATH/launch_docker_container.sh"
+          chmod +x "$DESKTOP_PATH/"*.sh
           chown pi:pi "$DESKTOP_PATH/"*.sh
 
-          #-----------------------------------------
-          # Done. Disable & remove first_boot_setup so it doesn't run again.
-          #-----------------------------------------
+          # ---------------------------------------
+          # Self-remove so it only runs once
+          # ---------------------------------------
           systemctl disable first_boot_setup.service
           rm -f /etc/systemd/system/first_boot_setup.service
           rm -f /usr/local/bin/first_boot_setup.sh
 
-          echo "[FIRST BOOT] Setup complete. Reboot recommended."
+          echo "[FIRST BOOT] Done installing camera drivers!"
           exit 0
           FIRSTBOOT
 
           chmod +x /usr/local/bin/first_boot_setup.sh
 
-          # Create the systemd service
           cat << 'SERVEOF' > /etc/systemd/system/first_boot_setup.service
           [Unit]
           Description=Install camera drivers & set up IMSwitch on first boot
@@ -220,19 +223,17 @@ jobs:
           WantedBy=multi-user.target
           SERVEOF
 
-          # Enable so it runs at next real boot
           systemctl enable first_boot_setup.service
 
-          # --------------------------------------------------------------------
-          # 7. Remove policy-rc.d so final system can start services on real boot
-          # --------------------------------------------------------------------
+          # ----------------------------------------------------------------------------
+          # 7. Remove policy-rc.d so final system can start services
+          # ----------------------------------------------------------------------------
           rm /usr/sbin/policy-rc.d
 
           echo "Done. Exiting chroot script."
           exit 0
           EOF
 
-          # Mark our chroot script executable
           chmod +x stage-imswitch/package-imswitch/00-run-chroot.sh
 
       - name: Build imswitch Image
