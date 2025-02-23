@@ -84,7 +84,7 @@ jobs:
           verbose-output: true
           image-name: imswitch-raspi-lite
           # Basic config
-          disable-first-boot-user-rename: 0
+          disable-first-boot-user-rename: 1
           enable-noobs: false
           hostname: uc2
           password: youseetoo
