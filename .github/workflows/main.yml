@@ -25,202 +25,202 @@ jobs:
 
           # 3) Create prerun.sh
           cat > stage-imswitch/prerun.sh << 'PRERUN'
-#!/bin/bash -e
-if [ ! -d "${ROOTFS_DIR}" ]; then
-  copy_previous
-fi
-PRERUN
-          chmod +x stage-imswitch/prerun.sh
+          #!/bin/bash -e
+          if [ ! -d "${ROOTFS_DIR}" ]; then
+            copy_previous
+          fi
+          PRERUN
+                    chmod +x stage-imswitch/prerun.sh
 
-          # 4) Create the main 00-run-chroot.sh script
-          cat > stage-imswitch/package-imswitch/00-run-chroot.sh << 'EOF'
-#!/bin/bash -e
-#
-# 00-run-chroot.sh
-#
-# Runs in chroot during pi-gen build to:
-# - Block services from starting
-# - Download camera driver files into /tmp
-# - Place a first_boot_setup.sh script and systemd unit to install them on the Pi's first boot
-#
+                    # 4) Create the main 00-run-chroot.sh script
+                    cat > stage-imswitch/package-imswitch/00-run-chroot.sh << 'EOF'
+          #!/bin/bash -e
+          #
+          # 00-run-chroot.sh
+          #
+          # Runs in chroot during pi-gen build to:
+          # - Block services from starting
+          # - Download camera driver files into /tmp
+          # - Place a first_boot_setup.sh script and systemd unit to install them on the Pi's first boot
+          #
 
-# --------------------------------------------------------------------
-# 1. Prevent services from auto-starting in chroot
-# --------------------------------------------------------------------
-cat << 'POLICYRC' > /usr/sbin/policy-rc.d
-#!/bin/sh
-exit 101
-POLICYRC
-chmod +x /usr/sbin/policy-rc.d
+          # --------------------------------------------------------------------
+          # 1. Prevent services from auto-starting in chroot
+          # --------------------------------------------------------------------
+          cat << 'POLICYRC' > /usr/sbin/policy-rc.d
+          #!/bin/sh
+          exit 101
+          POLICYRC
+          chmod +x /usr/sbin/policy-rc.d
 
-# --------------------------------------------------------------------
-# 2. Fix hostname resolution warnings
-# --------------------------------------------------------------------
-echo "127.0.0.1 $(hostname)" >> /etc/hosts
+          # --------------------------------------------------------------------
+          # 2. Fix hostname resolution warnings
+          # --------------------------------------------------------------------
+          echo "127.0.0.1 $(hostname)" >> /etc/hosts
 
-# --------------------------------------------------------------------
-# 3. Non-interactive debconf
-# --------------------------------------------------------------------
-export DEBIAN_FRONTEND=noninteractive
+          # --------------------------------------------------------------------
+          # 3. Non-interactive debconf
+          # --------------------------------------------------------------------
+          export DEBIAN_FRONTEND=noninteractive
 
-# --------------------------------------------------------------------
-# 4. Install basic tools needed for downloading & unzipping
-# --------------------------------------------------------------------
-apt-get update
-apt-get install -y git nano python3-pip wget unzip
+          # --------------------------------------------------------------------
+          # 4. Install basic tools needed for downloading & unzipping
+          # --------------------------------------------------------------------
+          apt-get update
+          apt-get install -y git nano python3-pip wget unzip
 
-# --------------------------------------------------------------------
-# 5. Download camera driver files into /tmp
-#    (They will remain in the final image at /tmp.)
-# --------------------------------------------------------------------
-cd /tmp
+          # --------------------------------------------------------------------
+          # 5. Download camera driver files into /tmp
+          #    (They will remain in the final image at /tmp.)
+          # --------------------------------------------------------------------
+          cd /tmp
 
-# Daheng files
-wget -O Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz \
-  https://dahengimaging.com/downloads/Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz
-wget -O Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip \
-  https://dahengimaging.com/downloads/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip
+          # Daheng files
+          wget -O Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz \
+            https://dahengimaging.com/downloads/Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz
+          wget -O Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip \
+            https://dahengimaging.com/downloads/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip
 
-# Hik (MVS) driver zip
-wget -O MVS_STD_V3.0.1_240902.zip \
-  https://www.hikrobotics.com/en2/source/vision/video/2024/9/3/MVS_STD_V3.0.1_240902.zip
+          # Hik (MVS) driver zip
+          wget -O MVS_STD_V3.0.1_240902.zip \
+            https://www.hikrobotics.com/en2/source/vision/video/2024/9/3/MVS_STD_V3.0.1_240902.zip
 
-# (Optionally, if the .deb is inside that zip, we will unzip it on first boot.
-#  If you prefer to store an already-extracted .deb, you can do so, e.g.:
-# wget -O MVS-3.0.1_aarch64_20240902.deb <some direct link> )
+          # (Optionally, if the .deb is inside that zip, we will unzip it on first boot.
+          #  If you prefer to store an already-extracted .deb, you can do so, e.g.:
+          # wget -O MVS-3.0.1_aarch64_20240902.deb <some direct link> )
 
-# --------------------------------------------------------------------
-# 6. Create the first_boot_setup.sh & service
-#    This will run on the Pi, not in chroot.
-# --------------------------------------------------------------------
+          # --------------------------------------------------------------------
+          # 6. Create the first_boot_setup.sh & service
+          #    This will run on the Pi, not in chroot.
+          # --------------------------------------------------------------------
 
-cat << 'FIRSTBOOT' > /usr/local/bin/first_boot_setup.sh
-#!/bin/bash -e
-#
-# first_boot_setup.sh
-# Runs once on the Pi at first boot to install camera drivers
-# from /tmp, set environment vars, create desktop scripts, etc.
+          cat << 'FIRSTBOOT' > /usr/local/bin/first_boot_setup.sh
+          #!/bin/bash -e
+          #
+          # first_boot_setup.sh
+          # Runs once on the Pi at first boot to install camera drivers
+          # from /tmp, set environment vars, create desktop scripts, etc.
 
-echo "[FIRST BOOT] Installing camera drivers from /tmp..."
+          echo "[FIRST BOOT] Installing camera drivers from /tmp..."
 
-# A) Install HIK/MVS driver
-cd /tmp
-unzip MVS_STD_V3.0.1_240902.zip || true
-# If the .deb is inside the unzipped folder:
-if [ -f /tmp/MVS-3.0.1_aarch64_20240902.deb ]; then
-  dpkg -i /tmp/MVS-3.0.1_aarch64_20240902.deb || true
-else
-  echo "MVS .deb not found after unzip!"
-fi
+          # A) Install HIK/MVS driver
+          cd /tmp
+          unzip MVS_STD_V3.0.1_240902.zip || true
+          # If the .deb is inside the unzipped folder:
+          if [ -f /tmp/MVS-3.0.1_aarch64_20240902.deb ]; then
+            dpkg -i /tmp/MVS-3.0.1_aarch64_20240902.deb || true
+          else
+            echo "MVS .deb not found after unzip!"
+          fi
 
-# Copy GrabImage.py if present
-if [ -d /opt/MVS/Samples/aarch64/Python/ ]; then
-  cd /opt/MVS/Samples/aarch64/Python/
-  cp GrabImage/GrabImage.py MvImport/GrabImage.py || true
-fi
+          # Copy GrabImage.py if present
+          if [ -d /opt/MVS/Samples/aarch64/Python/ ]; then
+            cd /opt/MVS/Samples/aarch64/Python/
+            cp GrabImage/GrabImage.py MvImport/GrabImage.py || true
+          fi
 
-# Append environment variables to /etc/profile
-echo 'export MVCAM_COMMON_RUNENV=/opt/MVS/lib' >> /etc/profile
-echo 'export LD_LIBRARY_PATH=/opt/MVS/lib/64:/opt/MVS/lib/32:$LD_LIBRARY_PATH' >> /etc/profile
+          # Append environment variables to /etc/profile
+          echo 'export MVCAM_COMMON_RUNENV=/opt/MVS/lib' >> /etc/profile
+          echo 'export LD_LIBRARY_PATH=/opt/MVS/lib/64:/opt/MVS/lib/32:$LD_LIBRARY_PATH' >> /etc/profile
 
-# B) Install Daheng driver
-echo "[FIRST BOOT] Installing Daheng driver..."
-cd /tmp
-unzip Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip || true
-tar -zxvf Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz || true
+          # B) Install Daheng driver
+          echo "[FIRST BOOT] Installing Daheng driver..."
+          cd /tmp
+          unzip Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip || true
+          tar -zxvf Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz || true
 
-cd /tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202
-chmod +x Galaxy_camera.run
+          cd /tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202
+          chmod +x Galaxy_camera.run
 
-# Build and install the Python API
-cd /tmp/Galaxy_Linux_Python_2.0.2106.9041/api
-python3 setup.py build
-python3 setup.py install
+          # Build and install the Python API
+          cd /tmp/Galaxy_Linux_Python_2.0.2106.9041/api
+          python3 setup.py build
+          python3 setup.py install
 
-# Run the Daheng installer (auto-enter)
-echo "Y En Y" | /tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202/Galaxy_camera.run || true
+          # Run the Daheng installer (auto-enter)
+          echo "Y En Y" | /tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202/Galaxy_camera.run || true
 
-# Set library path
-echo 'export LD_LIBRARY_PATH=/usr/lib:/tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202:$LD_LIBRARY_PATH' >> /etc/profile
+          # Set library path
+          echo 'export LD_LIBRARY_PATH=/usr/lib:/tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202:$LD_LIBRARY_PATH' >> /etc/profile
 
-# Install Python packages
-pip3 install pillow numpy
+          # Install Python packages
+          pip3 install pillow numpy
 
-#-----------------------------------------
-# Desktop setup for user 'pi'
-#-----------------------------------------
-USER_HOME="/home/pi"
-DESKTOP_PATH="$USER_HOME/Desktop"
-DOWNLOADS_PATH="$USER_HOME/Downloads"
-mkdir -p "$DESKTOP_PATH" "$DOWNLOADS_PATH"
-chown -R pi:pi "$DESKTOP_PATH" "$DOWNLOADS_PATH"
+          #-----------------------------------------
+          # Desktop setup for user 'pi'
+          #-----------------------------------------
+          USER_HOME="/home/pi"
+          DESKTOP_PATH="$USER_HOME/Desktop"
+          DOWNLOADS_PATH="$USER_HOME/Downloads"
+          mkdir -p "$DESKTOP_PATH" "$DOWNLOADS_PATH"
+          chown -R pi:pi "$DESKTOP_PATH" "$DOWNLOADS_PATH"
 
-# Create Docker scripts
-cat << 'SCRIPT1' > "$DESKTOP_PATH/update_docker_container.sh"
-#!/bin/bash
-sudo docker pull ghcr.io/openuc2/imswitch-noqt-arm64:latest
-SCRIPT1
+          # Create Docker scripts
+          cat << 'SCRIPT1' > "$DESKTOP_PATH/update_docker_container.sh"
+          #!/bin/bash
+          sudo docker pull ghcr.io/openuc2/imswitch-noqt-arm64:latest
+          SCRIPT1
 
-cat << 'SCRIPT2' > "$DESKTOP_PATH/launch_docker_container.sh"
-#!/bin/bash
-docker run -it --rm \
-  -p 8001:8001 -p 8002:8002 -p 8003:8003 -p 8888:8888 -p 2222:22 \
-  -e CONFIG_PATH=/config \
-  -e DATA_PATH=/dataset \
-  -v ~/Documents/imswitch_docker/imswitch_git:/tmp/ImSwitch-changes \
-  -v ~/Documents/imswitch_docker/imswitch_pip:/persistent_pip_packages \
-  -v ~/Downloads:/dataset \
-  -v ~/:/config \
-  -e HEADLESS=1 \
-  -e HTTP_PORT=8001 \
-  -e UPDATE_INSTALL_GIT=0 \
-  -e UPDATE_CONFIG=0 \
-  --privileged ghcr.io/openuc2/imswitch-noqt-arm64:latest
-SCRIPT2
+          cat << 'SCRIPT2' > "$DESKTOP_PATH/launch_docker_container.sh"
+          #!/bin/bash
+          docker run -it --rm \
+            -p 8001:8001 -p 8002:8002 -p 8003:8003 -p 8888:8888 -p 2222:22 \
+            -e CONFIG_PATH=/config \
+            -e DATA_PATH=/dataset \
+            -v ~/Documents/imswitch_docker/imswitch_git:/tmp/ImSwitch-changes \
+            -v ~/Documents/imswitch_docker/imswitch_pip:/persistent_pip_packages \
+            -v ~/Downloads:/dataset \
+            -v ~/:/config \
+            -e HEADLESS=1 \
+            -e HTTP_PORT=8001 \
+            -e UPDATE_INSTALL_GIT=0 \
+            -e UPDATE_CONFIG=0 \
+            --privileged ghcr.io/openuc2/imswitch-noqt-arm64:latest
+          SCRIPT2
 
-chmod +x "$DESKTOP_PATH/update_docker_container.sh" "$DESKTOP_PATH/launch_docker_container.sh"
-chown pi:pi "$DESKTOP_PATH/"*.sh
+          chmod +x "$DESKTOP_PATH/update_docker_container.sh" "$DESKTOP_PATH/launch_docker_container.sh"
+          chown pi:pi "$DESKTOP_PATH/"*.sh
 
-#-----------------------------------------
-# Done. Disable & remove first_boot_setup so it doesn't run again.
-#-----------------------------------------
-systemctl disable first_boot_setup.service
-rm -f /etc/systemd/system/first_boot_setup.service
-rm -f /usr/local/bin/first_boot_setup.sh
+          #-----------------------------------------
+          # Done. Disable & remove first_boot_setup so it doesn't run again.
+          #-----------------------------------------
+          systemctl disable first_boot_setup.service
+          rm -f /etc/systemd/system/first_boot_setup.service
+          rm -f /usr/local/bin/first_boot_setup.sh
 
-echo "[FIRST BOOT] Setup complete. Reboot recommended."
-exit 0
-FIRSTBOOT
+          echo "[FIRST BOOT] Setup complete. Reboot recommended."
+          exit 0
+          FIRSTBOOT
 
-chmod +x /usr/local/bin/first_boot_setup.sh
+          chmod +x /usr/local/bin/first_boot_setup.sh
 
-# Create the systemd service
-cat << 'SERVEOF' > /etc/systemd/system/first_boot_setup.service
-[Unit]
-Description=Install camera drivers & set up IMSwitch on first boot
-After=multi-user.target
-Requires=multi-user.target
+          # Create the systemd service
+          cat << 'SERVEOF' > /etc/systemd/system/first_boot_setup.service
+          [Unit]
+          Description=Install camera drivers & set up IMSwitch on first boot
+          After=multi-user.target
+          Requires=multi-user.target
 
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/first_boot_setup.sh
-RemainAfterExit=yes
+          [Service]
+          Type=oneshot
+          ExecStart=/usr/local/bin/first_boot_setup.sh
+          RemainAfterExit=yes
 
-[Install]
-WantedBy=multi-user.target
-SERVEOF
+          [Install]
+          WantedBy=multi-user.target
+          SERVEOF
 
-# Enable so it runs at next real boot
-systemctl enable first_boot_setup.service
+          # Enable so it runs at next real boot
+          systemctl enable first_boot_setup.service
 
-# --------------------------------------------------------------------
-# 7. Remove policy-rc.d so final system can start services on real boot
-# --------------------------------------------------------------------
-rm /usr/sbin/policy-rc.d
+          # --------------------------------------------------------------------
+          # 7. Remove policy-rc.d so final system can start services on real boot
+          # --------------------------------------------------------------------
+          rm /usr/sbin/policy-rc.d
 
-echo "Done. Exiting chroot script."
-exit 0
-EOF
+          echo "Done. Exiting chroot script."
+          exit 0
+          EOF
 
           # Mark our chroot script executable
           chmod +x stage-imswitch/package-imswitch/00-run-chroot.sh
