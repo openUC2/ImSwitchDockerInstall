@@ -86,7 +86,7 @@ jobs:
               curl -sSL https://get.docker.com | sh
 
               # Add current user to the Docker group
-              sudo usermod -aG docker $USER
+              usermod -aG docker pi || true
 
               # Print message to logout and login again
               echo "Please log out and log back in to apply the Docker group changes."
