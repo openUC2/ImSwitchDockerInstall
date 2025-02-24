@@ -96,7 +96,7 @@ jobs:
 
           # install raspap
           export TERM=xterm
-          apt-get install -y whiptail (for the two lines)
+          apt-get update -y && apt-get install -y curl dhcpcd5 iptables procps whiptail # (for the two lines)
           curl -sL https://install.raspap.com | bash -s -- --yes --wireguard 0 --adblock 0 --openvpn 0 --restapi 1 --update
 
           # Generate your custom SSID with random digits
