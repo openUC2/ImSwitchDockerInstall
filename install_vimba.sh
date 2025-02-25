@@ -64,6 +64,6 @@ echo "============================="
 echo "Please open a new terminal or 'source ~/.bashrc' so the environment variables take effect."
 echo "After that, you should be able to run 'python3' and use VimbaPython." # Export environment variable for GenTL detection (add to ~/.bashrc as needed)
 
-export GENICAM_GENTL64_PATH="$GENICAM_GENTL64_PATH:/opt/Vimba_6_0/VimbaUSBTL/CTI/arm_64bit"
+export GENICAM_GENTL64_PATH="${GENICAM_GENTL64_PATH:-}:/opt/Vimba_6_0/VimbaUSBTL/CTI/arm_64bit"
 
 echo "Vimba installation complete."
