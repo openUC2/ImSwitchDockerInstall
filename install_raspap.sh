@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -eu
+#!/usr/bin/env -S bash -eu
 
 # Install RaspAP silently with defaults
 mkdir tmp
