@@ -9,7 +9,9 @@ sudo apt-get install -y hostapd
 sudo mkdir -p /etc/raspap/system
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
-sudo systemctl start hostapd
+if ! sudo systemctl start hostapd 2>/dev/null; then
+  echo "Warning: couldn't start hostapd. This is expected if you're running in an unbooted container."
+fi
 
 curl -sL https://install.raspap.com | bash -s -- --yes --wireguard 0 --adblock 0 --openvpn 0 --restapi 1 --update
 
