@@ -1,5 +1,8 @@
 #!/usr/bin/env -S bash -eu
 
+# Determine the base path for copied files
+config_files_root=$(dirname "$(realpath "$BASH_SOURCE")")
+
 # Install RaspAP silently with defaults
 mkdir tmp
 sudo apt-get update
@@ -26,6 +29,11 @@ SSID="openUC2-$(tr -dc 0-9 </dev/urandom | head -c 6)"
 echo "Using SSID: $SSID"
 
 # Update hostapd settings with new SSID and pass
+if [ ! -f /etc/hostapd/hostapd.conf ]; then
+  # This condition occurs if we couldn't start hostapd because we're in an unbooted container
+  file="/etc/hostapd/hostapd.conf"
+  sudo cp "$config_files_root$file" "$file"
+fi
 sudo sed -i "s/^ssid=.*/ssid=$SSID/g" /etc/hostapd/hostapd.conf
 sudo sed -i "s/^wpa_passphrase=.*/wpa_passphrase=youseetoo/g" /etc/hostapd/hostapd.conf
 
