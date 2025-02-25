@@ -28,7 +28,7 @@ sudo python3 setup.py install
 echo "Y En Y" | sudo /tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202/Galaxy_camera.run
 
 # Set the library path
-export LD_LIBRARY_PATH="/usr/lib:/tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="/usr/lib:/tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202:${LD_LIBRARY_PATH:-}"
 
 # Install Python packages
 pip3 install pillow numpy

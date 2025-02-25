@@ -14,4 +14,4 @@ sudo dpkg -i MVS-3.0.1_aarch64_20240902.deb
 cd /opt/MVS/Samples/aarch64/Python/
 cp GrabImage/GrabImage.py MvImport/GrabImage.py
 export MVCAM_COMMON_RUNENV=/opt/MVS/lib
-export LD_LIBRARY_PATH="/opt/MVS/lib/64:/opt/MVS/lib/32:${LD_LIBRARY_PATH-}"
+export LD_LIBRARY_PATH="/opt/MVS/lib/64:/opt/MVS/lib/32:${LD_LIBRARY_PATH:-}"
