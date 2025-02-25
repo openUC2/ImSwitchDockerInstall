@@ -22,7 +22,7 @@ chmod +x Galaxy_camera.run
 # Build and install the Python API
 cd /tmp/Galaxy_Linux_Python_2.0.2106.9041/api
 python3 setup.py build
-python3 setup.py install
+sudo python3 setup.py install
 
 # Run the installer script using expect to automate Enter key presses
 echo "Y En Y" | sudo /tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202/Galaxy_camera.run
