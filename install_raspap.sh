@@ -34,6 +34,12 @@ sudo sed -i 's|\(url.redirect = \).*|\1("/.*" => "http://10.3.141.1:8001/imsiwtc
   /etc/lighttpd/conf-available/10-raspap-captiveportal.conf
 
 # 6) Restart services to apply changes
-sudo systemctl restart lighttpd
-sudo systemctl restart hostapd
-sudo systemctl restart dnsmasq
+if ! sudo systemctl restart lighttpd 2>/dev/null; then
+  echo "Warning: couldn't restart lighttpd. This is expected if you're running in an unbooted container."
+fi
+if ! sudo systemctl restart hostapd 2>/dev/null; then
+  echo "Warning: couldn't restart hostapd. This is expected if you're running in an unbooted container."
+fi
+if ! sudo systemctl restart dnsmasq 2>/dev/null; then
+  echo "Warning: couldn't restart dnsmasq. This is expected if you're running in an unbooted container."
+fi
