@@ -13,10 +13,9 @@ if ! sudo systemctl start hostapd 2>/dev/null; then
   echo "Warning: couldn't start hostapd. This is expected if you're running in an unbooted container."
 fi
 
-echo "terminal: $TERM"
-if [ "$TERM" = "dumb" ]; then
-  echo "Log-only terminal detected. We'll pretend we're xterm for the RaspAP installer script!"
-  export TERM="xterm"
+if [ "$TERM" = "unknown" ]; then
+  echo "Unknown terminal detected. We'll pretend we're a real terminal for the RaspAP installer script!"
+  export TERM="dumb"
 fi
 curl -sL https://install.raspap.com | bash -s -- --yes --wireguard 0 --adblock 0 --openvpn 0 --restapi 1 --update
 
