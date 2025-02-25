@@ -1,5 +1,8 @@
 #!/bin/bash
 # install_dahengdriver.sh
+
+sudo apt-get install -y python3 python3-pip
+
 # Create the udev rules directory
 mkdir -p /etc/udev/rules.d
 
