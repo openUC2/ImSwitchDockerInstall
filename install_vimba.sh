@@ -38,7 +38,7 @@ sudo python3 -m pip install . --break-system-packages
 
 # Remove the temporary copy
 cd /tmp
-rm -rf /tmp/VimbaPython
+sudo rm -rf /tmp/VimbaPython
 
 # If you need pymba for older code references (rarely needed with new VimbaPython):
 #   sudo python3 -m pip install pymba --break-system-packages
@@ -47,7 +47,7 @@ rm -rf /tmp/VimbaPython
 # or for GigE T/L in /opt/Vimba_6_0/VimbaGigETL/CTI/arm_64bit.
 # We append them to ~/.bashrc to make them permanent for your user.
 # If you prefer them system-wide, put them in /etc/profile.d/xxx.sh
-cat << EOF >> ~/.bashrc
+cat >> ~/.bashrc << EOF
 
 # Vimba environment variables (added by install script)
 export GENICAM_GENTL64_PATH="/opt/Vimba_6_0/VimbaUSBTL/CTI/arm_64bit:\$GENICAM_GENTL64_PATH"
@@ -61,7 +61,7 @@ echo "============================="
 echo " Vimba installation complete"
 echo "============================="
 echo "Please open a new terminal or 'source ~/.bashrc' so the environment variables take effect."
-echo "After that, you should be able to run 'python3' and use VimbaPython."# Export environment variable for GenTL detection (add to ~/.bashrc as needed)
+echo "After that, you should be able to run 'python3' and use VimbaPython." # Export environment variable for GenTL detection (add to ~/.bashrc as needed)
 
 export GENICAM_GENTL64_PATH="$GENICAM_GENTL64_PATH:/opt/Vimba_6_0/VimbaUSBTL/CTI/arm_64bit"
 
