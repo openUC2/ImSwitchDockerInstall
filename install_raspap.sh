@@ -17,7 +17,9 @@ if [ "$TERM" = "unknown" ]; then
   echo "Unknown terminal detected. We'll pretend we're a real terminal for the RaspAP installer script!"
   export TERM="dumb"
 fi
-curl -sL https://install.raspap.com | bash -s -- --yes --wireguard 0 --adblock 0 --openvpn 0 --restapi 1 --update
+curl -sL https://install.raspap.com |
+  bash -s -- --yes --wireguard 0 --adblock 0 --openvpn 0 --restapi 1 --update ||
+  echo "Warning: RaspAP installer died for some reason, so it may not have been installed correctly!"
 
 # Generate your custom SSID with random digits
 SSID="openUC2-$(tr -dc 0-9 </dev/urandom | head -c 6)"
