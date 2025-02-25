@@ -20,7 +20,9 @@ sudo rm -f /tmp/Vimba_arm64.tgz
 
 # (Optional) Install the USB transport layer if you have a USB camera.
 cd /opt/Vimba_6_0/VimbaUSBTL
-sudo ./Install.sh
+if ! sudo ./Install.sh; then
+    echo "Warning: USB transport layer could not be installed!"
+fi
 
 # (Optional) Install the GigE transport layer if you have a GigE camera:
 #   cd /opt/Vimba_6_0/VimbaGigETL
