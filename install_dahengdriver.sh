@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 # install_dahengdriver.sh
 
 sudo apt-get install -y python3 python3-pip
@@ -7,7 +7,6 @@ sudo apt-get install -y python3 python3-pip
 mkdir -p /etc/udev/rules.d
 
 sudo mv /usr/lib/python3.11/EXTERNALLY-MANAGED /usr/lib/python3.11/EXTERNALLY-MANAGED.old
-
 
 # Download and install the appropriate Hik driver based on architecture
 cd /tmp
@@ -36,4 +35,3 @@ pip3 install pillow numpy
 
 # Source the bashrc file
 source ~/.bashrc
-

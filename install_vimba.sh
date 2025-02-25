@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 # Update and install prerequisites
 sudo apt-get update
@@ -8,7 +8,6 @@ sudo apt-get install -y wget tar python3 python3-pip
 wget https://downloads.alliedvision.com/Vimba_v6.0_ARM64.tgz -O /tmp/Vimba_arm64.tgz
 sudo tar -xzf /tmp/Vimba_arm64.tgz -C /opt
 rm /tmp/Vimba_arm64.tgz
-
 
 # Update and install prerequisites
 sudo apt-get update
@@ -47,7 +46,7 @@ sudo rm -rf /tmp/VimbaPython
 # or for GigE T/L in /opt/Vimba_6_0/VimbaGigETL/CTI/arm_64bit.
 # We append them to ~/.bashrc to make them permanent for your user.
 # If you prefer them system-wide, put them in /etc/profile.d/xxx.sh
-cat >> ~/.bashrc << EOF
+cat >>~/.bashrc <<EOF
 
 # Vimba environment variables (added by install script)
 export GENICAM_GENTL64_PATH="/opt/Vimba_6_0/VimbaUSBTL/CTI/arm_64bit:\$GENICAM_GENTL64_PATH"

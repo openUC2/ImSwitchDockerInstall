@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 # install_autostart.sh
 # Define variables
 START_SCRIPT_PATH="$HOME/Desktop/start_imswitch.sh"
@@ -6,7 +6,7 @@ SERVICE_FILE_PATH="/etc/systemd/system/start_imswitch.service"
 PYTHON_SCRIPT_PATH="$HOME/detect_drive.py"
 
 # Create the Python script to detect external drives
-cat << 'EOF' > $PYTHON_SCRIPT_PATH
+cat <<'EOF' >$PYTHON_SCRIPT_PATH
 import platform
 import subprocess
 
@@ -62,10 +62,10 @@ if __name__ == "__main__":
 EOF
 
 # Make the Python script executable
-chmod +x $PYTHON_SCRIPT_PATH
+chmod +x "$PYTHON_SCRIPT_PATH"
 
 # Create the startup script
-cat << 'EOF' > $START_SCRIPT_PATH
+cat <<'EOF' >$START_SCRIPT_PATH
 #!/bin/bash
 set -x
 
@@ -125,7 +125,7 @@ echo "Startup script completed"
 EOF
 
 # Make the startup script executable
-chmod +x $START_SCRIPT_PATH
+chmod +x "$START_SCRIPT_PATH"
 
 echo "Startup script created at $START_SCRIPT_PATH and made executable."
 

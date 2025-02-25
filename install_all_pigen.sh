@@ -1,5 +1,5 @@
-#!/bin/bash
-# install requirements 
+#!/bin/bash -eu
+# install requirements
 sudo apt-get update
 
 # in case they don't exist create Download/Desktop folder (e.g. lite)
@@ -37,7 +37,7 @@ wget https://www.hikrobotics.com/en2/source/vision/video/2024/9/3/MVS_STD_V3.0.1
 # --------------------------------------------------------------------------
 # 1) Create /usr/local/bin/first_boot_setup.sh
 # --------------------------------------------------------------------------
-cat << 'EOF' > /usr/local/bin/first_boot_setup.sh
+cat <<'EOF' >/usr/local/bin/first_boot_setup.sh
 #!/bin/bash -e
 #
 # first_boot_setup.sh
@@ -259,7 +259,7 @@ chmod +x /usr/local/bin/first_boot_setup.sh
 # 2) Create /etc/systemd/system/first_boot_setup.service
 #    so that script runs once on real Pi, after boot
 # --------------------------------------------------------------------------
-cat << 'SERVICEOF' > /etc/systemd/system/first_boot_setup.service
+cat <<'SERVICEOF' >/etc/systemd/system/first_boot_setup.service
 [Unit]
 Description=Install MVS driver & set up IMSwitch on first boot
 After=multi-user.target

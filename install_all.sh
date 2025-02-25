@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 # install requirements
 sudo apt-get update
@@ -43,4 +43,3 @@ echo "Set install_autostart for ImSwitch"
 sudo usermod -a -G dialout "$USER"
 sudo usermod -a -G tty "$USER"
 echo "Please reboot to take effect of adding serial devices to user group"
-
