@@ -5,8 +5,8 @@ sudo apt-get update
 sudo apt-get install -y git curl
 
 # in case they don't exist create Download/Desktop folder (e.g. lite)
-mkdir ~/Downloads
-mkdir ~/Desktop
+mkdir -p ~/Downloads
+mkdir -p ~/Desktop
 
 cd ~/Downloads/ImSwitchDockerInstall
 echo "Install Docker"
