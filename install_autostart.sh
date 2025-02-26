@@ -153,6 +153,8 @@ EOF"
 # Reload systemd, enable and start the new service
 sudo systemctl daemon-reload
 sudo systemctl enable start_imswitch.service
-sudo systemctl start start_imswitch.service
+if ! sudo systemctl start start_imswitch.service 2>/dev/null; then
+    echo "Warning: couldn't start imswitch. This is expected if you're running in an unbooted container."
+fi
 
 echo "Systemd service created and enabled to start at boot."
