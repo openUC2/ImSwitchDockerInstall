@@ -1,15 +1,15 @@
-#!/bin/bash
+#!/bin/bash -eu
 # create_desktopicons.sh
 # Define the desktop path
 DESKTOP_PATH=~/Desktop
 # if not exist, create the desktop path
-mkdir -p $DESKTOP_PATH
+mkdir -p "$DESKTOP_PATH"
 
 # Create the update script
 echo "#!/bin/bash
 # Pull the latest version of the docker container
 docker pull ghcr.io/openuc2/imswitch-noqt-arm64:latest
-" > "$DESKTOP_PATH/update_docker_container.sh"
+" >"$DESKTOP_PATH/update_docker_container.sh"
 
 # Make the update script executable
 chmod +x "$DESKTOP_PATH/update_docker_container.sh"
@@ -30,7 +30,7 @@ sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -p 8003:8003 -p 8888:8888 -p 
 -e UPDATE_INSTALL_GIT=0 \
 -e UPDATE_CONFIG=0 \
 --privileged ghcr.io/openuc2/imswitch-noqt-arm64:latest
-" > "$DESKTOP_PATH/launch_docker_container.sh"
+" >"$DESKTOP_PATH/launch_docker_container.sh"
 
 # Make the launch script executable
 chmod +x "$DESKTOP_PATH/launch_docker_container.sh"

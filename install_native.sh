@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 sudo apt-get update
 sudo apt-get install -y git curl
 
@@ -9,7 +9,7 @@ mkdir ~/Desktop
 # Set timezone
 export TZ=America/Los_Angeles
 echo "Setting timezone to $TZ"
-sudo ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+sudo ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime && echo "$TZ" >/etc/timezone
 
 # Update and install necessary dependencies
 echo "Updating system and installing dependencies"
@@ -113,4 +113,4 @@ sudo ufw allow 8888
 echo "Installation complete. To run the application, use the following command:"
 echo "source /opt/conda/bin/activate imswitch311 && python3 ~/ImSwitch/main.py --headless --http-port 8001"
 
-echo "source /opt/conda/bin/activate imswitch311" >> ~/.bashrc
+echo "source /opt/conda/bin/activate imswitch311" >>~/.bashrc

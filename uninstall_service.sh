@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 # Define variables
 START_SCRIPT_PATH="$HOME/Desktop/start_imswitch.sh"
