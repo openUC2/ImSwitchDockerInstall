@@ -37,17 +37,22 @@ fi
 sudo sed -i "s/^ssid=.*/ssid=$SSID/g" /etc/hostapd/hostapd.conf
 sudo sed -i "s/^wpa_passphrase=.*/wpa_passphrase=youseetoo/g" /etc/hostapd/hostapd.conf
 
-# Enable captive portal in RaspAP’s config
-# This is controlled by /etc/lighttpd/conf-available/10-raspap-captiveportal.conf
-# and a few RaspAP config files. The simplest method:
 sudo raspi-config nonint do_hostname "raspberrypi" # optional, just an example usage
-sudo cp /etc/lighttpd/conf-available/10-raspap-captiveportal.conf /etc/lighttpd/conf-enabled/
 
-# Redirect all requests to your custom page. Adjust as needed.
-#    By default, 10-raspap-captiveportal.conf might redirect to /captiveportal/index.php
-#    You can override or replace the existing rule. For example:
-sudo sed -i 's|\(url.redirect = \).*|\1("/.*" => "http://10.3.141.1:8001/imsiwtch/index.html")|g' \
-  /etc/lighttpd/conf-available/10-raspap-captiveportal.conf
+if [ -f /etc/lighttpd/conf-available/10-raspap-captiveportal.conf ]; then
+  # Enable captive portal in RaspAP’s config
+  # This is controlled by /etc/lighttpd/conf-available/10-raspap-captiveportal.conf
+  # and a few RaspAP config files. The simplest method:
+  sudo cp /etc/lighttpd/conf-available/10-raspap-captiveportal.conf /etc/lighttpd/conf-enabled/
+
+  # Redirect all requests to your custom page. Adjust as needed.
+  #    By default, 10-raspap-captiveportal.conf might redirect to /captiveportal/index.php
+  #    You can override or replace the existing rule. For example:
+  sudo sed -i 's|\(url.redirect = \).*|\1("/.*" => "http://10.3.141.1:8001/imsiwtch/index.html")|g' \
+    /etc/lighttpd/conf-available/10-raspap-captiveportal.conf
+else
+  echo "Warning: couldn't find RaspAP lighttpd configs, so lighttpd may not be configured correctly!"
+fi
 
 # 6) Restart services to apply changes
 if ! sudo systemctl restart lighttpd 2>/dev/null; then
