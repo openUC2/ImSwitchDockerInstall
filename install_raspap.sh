@@ -21,7 +21,7 @@ if [ "$TERM" = "unknown" ]; then
   export TERM="dumb"
 fi
 curl -sL https://install.raspap.com |
-  bash -s -- --yes --wireguard 0 --adblock 0 --openvpn 0 --restapi 1 --update ||
+  bash -s -- --yes --wireguard 0 --adblock 0 --openvpn 0 --restapi 1 --update --check 0 ||
   echo "Warning: RaspAP installer died for some reason, so it may not have been installed correctly!"
 
 # Generate your custom SSID with random digits
