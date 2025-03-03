@@ -8,10 +8,14 @@ ls -lh
 
 # download the driver
 #if [ ! -f MVS_STD_V3.0.1_240902.zip ]; then
+# remove any existing files
+rm -rf MVS_STD_V3.0.1_240902.zip
+rm -rf MVS_STD_V3.0.1_240902
+rm -rf /tmp/MVS-3.0.1_aarch64_20240902.deb
 wget https://www.hikrobotics.com/en2/source/vision/video/2024/9/3/MVS_STD_V3.0.1_240902.zip
 #fi
 #unzip MVS_STD_GML_V2.1.2_231116.zip
-unzip MVS_STD_V3.0.1_240902.zip
+unzip MVS_STD_V3.0.1_240902.zip 
 echo "Install Hik Driver"
 sudo dpkg -i MVS-3.0.1_aarch64_20240902.deb
 cd /opt/MVS/Samples/aarch64/Python/
