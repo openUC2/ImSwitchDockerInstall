@@ -15,8 +15,6 @@ wget https://www.hikrobotics.com/en2/source/vision/video/2024/9/3/MVS_STD_V3.0.1
 echo "Unzip Hik Driver"
 unzip MVS_STD_V3.0.1_240902_1.zip 
 ls
-cd MVS_STD_V3.0.1_240902_1
-ls
 echo "Install Hik Driver"
 sudo dpkg -i MVS-3.0.1_aarch64_20240902.deb
 cd /opt/MVS/Samples/aarch64/Python/
