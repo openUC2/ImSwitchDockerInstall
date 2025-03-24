@@ -4,7 +4,7 @@
 config_files_root=$(dirname "$(realpath "$BASH_SOURCE")")
 
 # Install RaspAP silently with defaults
-mkdir tmp
+mkdir -p tmp
 sudo apt-get update
 sudo apt-get install -y git
 
@@ -15,6 +15,17 @@ sudo systemctl enable hostapd
 if ! sudo systemctl start hostapd 2>/dev/null; then
   echo "Warning: couldn't start hostapd. This is expected if you're running in an unbooted container."
 fi
+
+
+# Install RaspAP silently with defaults
+sudo sh -c 'cat <<EOF > /etc/initramfs-tools/conf.d/modules
+MODULES=most
+EOF'
+update-initramfs -u
+dpkg --configure -a
+apt-get -f install
+
+
 
 if [ "$TERM" = "unknown" ]; then
   echo "Unknown terminal detected. We'll pretend we're a real terminal for the RaspAP installer script!"

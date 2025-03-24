@@ -104,7 +104,7 @@ nohup sudo docker run --rm -d -p 8001:8001 -p 8002:8002 -p 8888:8888 -p 2222:22 
   -v ~/imswitch_docker/imswitch_git:/tmp/ImSwitch-changes \
   -v ~/imswitch_docker/imswitch_pip:/persistent_pip_packages \
   -v ~/:/config \
-  --privileged ghcr.io/openuc2/imswitch-noqt-x64:latest > $DOCKER_LOGFILE 2>&1 & 
+  --privileged ghcr.io/openuc2/imswitch-noqt-arm64:latest > $DOCKER_LOGFILE 2>&1 & 
 
 # Wait a bit to ensure Docker starts
 sleep 30
