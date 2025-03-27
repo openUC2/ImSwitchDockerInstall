@@ -54,3 +54,20 @@ sudo docker run -it --rm -p 8001:8001 -p 8003:8002 -p 2222:22 -p 8889:8888 -e HE
 ```
 sudo docker run -it --rm -p 8001:8001 -p 8003:8002 -p 2222:22 -p 8889:8888 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_virtual_microscope.json -e UPDATE_GIT=0 -e UPDATE_CONFIG=0 -v ~/:/config -e CONFIG_PATH=/config -e ssl=0  --privilege d ghcr.io/openuc2/imswitch-noqt-arm64:latest
 ```
+
+
+## Manually Check if service is working
+
+```
+sudo systemctl start start_imswitch.service
+sudo journalctl -f -u start_imswitch.service
+```
+
+## Remove the Autostart service again
+
+```
+sudo systemctl stop start_imswitch.service
+sudo systemctl disable start_imswitch.service
+sudo rm /etc/systemd/system/start_imswitch.service
+sudo systemctl daemon-reload
+```

@@ -5,6 +5,13 @@ START_SCRIPT_PATH="$HOME/Desktop/start_imswitch.sh"
 SERVICE_FILE_PATH="/etc/systemd/system/start_imswitch.service"
 PYTHON_SCRIPT_PATH="$HOME/detect_drive.py"
 
+# first remove any old entries if available
+sudo systemctl stop start_imswitch.service
+sudo systemctl disable start_imswitch.service
+sudo rm /etc/systemd/system/start_imswitch.service
+sudo systemctl daemon-reload
+
+
 # Create the Python script to detect external drives
 cat <<'EOF' >$PYTHON_SCRIPT_PATH
 import platform
