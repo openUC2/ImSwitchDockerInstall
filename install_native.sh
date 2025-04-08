@@ -3,8 +3,8 @@ sudo apt-get update
 sudo apt-get install -y git curl
 
 # in case they don't exist create Download/Desktop folder (e.g. lite)
-mkdir ~/Downloads
-mkdir ~/Desktop
+mkdir -p ~/Downloads
+mkdir -p ~/Desktop
 
 # Set timezone
 export TZ=America/Los_Angeles
@@ -53,7 +53,20 @@ source ~/.bashrc
 # Set environment variable for MVCAM_COMMON_RUNENV
 echo "Setting environment variables"
 export MVCAM_COMMON_RUNENV=/opt/MVS/lib
-export LD_LIBRARY_PATH=/opt/MVS/lib/64:/opt/MVS/lib/32:$LD_LIBRARY_PATH
+
+
+# Check if LD_LIBRARY_PATH is set
+if [ -z "$LD_LIBRARY_PATH" ]; then
+    # If empty, set it
+    # This comment is in English
+    export LD_LIBRARY_PATH="/opt/MVS/lib/64:/opt/MVS/lib/32"
+else
+    # If not empty, append needed paths
+    # This comment is in English
+    export LD_LIBRARY_PATH="/opt/MVS/lib/64:/opt/MVS/lib/32:$LD_LIBRARY_PATH"
+fi
+
+
 
 # Install Miniforge
 echo "Installing Miniforge"
