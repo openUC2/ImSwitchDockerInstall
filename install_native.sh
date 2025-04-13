@@ -28,46 +28,6 @@ sudo apt-get update && sudo apt-get install -y \
 # Clean up apt caches
 sudo apt-get clean
 sudo rm -rf /var/lib/apt/lists/*
-
-# Download and install the appropriate Hik driver
-echo "Downloading and installing Hik driver"
-cd /tmp
-wget https://www.hikrobotics.com/cn2/source/support/software/MVS_STD_GML_V2.1.2_231116.zip
-unzip MVS_STD_GML_V2.1.2_231116.zip
-
-ARCH=$(uname -m)
-if [ "$ARCH" = "aarch64" ]; then
-    sudo dpkg -i MVS-2.1.2_aarch64_20231116.deb
-elif [ "$ARCH" = "x86_64" ]; then
-    sudo dpkg -i MVS-2.1.2_x86_64_20231116.deb
-fi
-
-# Create necessary directories
-echo "Creating directories"
-mkdir -p /opt/MVS/bin/fonts
-
-# Source the bashrc file
-echo "Sourcing .bashrc"
-source ~/.bashrc
-
-# Set environment variable for MVCAM_COMMON_RUNENV
-echo "Setting environment variables"
-export MVCAM_COMMON_RUNENV=/opt/MVS/lib
-
-
-# Check if LD_LIBRARY_PATH is set
-if [ -z "$LD_LIBRARY_PATH" ]; then
-    # If empty, set it
-    # This comment is in English
-    export LD_LIBRARY_PATH="/opt/MVS/lib/64:/opt/MVS/lib/32"
-else
-    # If not empty, append needed paths
-    # This comment is in English
-    export LD_LIBRARY_PATH="/opt/MVS/lib/64:/opt/MVS/lib/32:$LD_LIBRARY_PATH"
-fi
-
-
-
 # Install Miniforge
 echo "Installing Miniforge"
 if [ "$ARCH" = "aarch64" ]; then
