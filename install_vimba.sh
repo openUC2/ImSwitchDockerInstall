@@ -1,69 +1,72 @@
 #!/bin/bash -eu
 
-# Update and install prerequisites
-sudo apt-get update
-sudo apt-get install -y wget tar python3 python3-pip
+# VimbaX Installation Script
+# This script installs VmbPy (VimbaX Python API) instead of the legacy VimbaPython
+# VimbaX is the successor to the legacy Vimba SDK
 
-# Download and extract the arm64 build of Vimba
-wget https://downloads.alliedvision.com/Vimba_v6.0_ARM64.tgz -O /tmp/Vimba_arm64.tgz
-sudo tar -xzf /tmp/Vimba_arm64.tgz -C /opt
-rm /tmp/Vimba_arm64.tgz
+echo "Installing VimbaX (VmbPy) for Allied Vision cameras..."
 
 # Update and install prerequisites
 sudo apt-get update
-sudo apt-get install -y wget tar python3 python3-pip
+sudo apt-get install -y python3 python3-pip libusb-1.0-0 udev wget
 
-# Download and extract the ARM64 build of Vimba 6.0
-wget https://downloads.alliedvision.com/Vimba_v6.0_ARM64.tgz -O /tmp/Vimba_arm64.tgz
-sudo tar -xzf /tmp/Vimba_arm64.tgz -C /opt
-sudo rm -f /tmp/Vimba_arm64.tgz
+# Install VmbPy from PyPI - this includes the VmbC libraries
+# We install with numpy and opencv extras for better integration
+echo "Installing VmbPy from PyPI..."
+sudo python3 -m pip install --break-system-packages vmbpy[numpy,opencv]
 
-# (Optional) Install the USB transport layer if you have a USB camera.
-cd /opt/Vimba_6_0/VimbaUSBTL
-if ! sudo ./Install.sh; then
-    echo "Warning: USB transport layer could not be installed!"
-fi
+echo "VmbPy installation complete!"
 
-# (Optional) Install the GigE transport layer if you have a GigE camera:
-#   cd /opt/Vimba_6_0/VimbaGigETL
-#   sudo ./Install.sh
-# Then set the GENICAM_GENTL64_PATH to point to the correct arm_64bit folder under VimbaGigETL.
+# Note: VmbPy includes the VmbC libraries, but does NOT include transport layers
+# For production use, you should install the full VimbaX SDK to get:
+# - USB Transport Layer (for USB cameras)
+# - GigE Transport Layer (for Gigabit Ethernet cameras)
+# - Device drivers and udev rules
 
-# Copy VimbaPython source to a writable location (pip needs to build wheels, etc.)
-mkdir -p /tmp/VimbaPython
-cp -r /opt/Vimba_6_0/VimbaPython/Source/* /tmp/VimbaPython/
+echo ""
+echo "================================================="
+echo " VmbPy (VimbaX Python API) Installation Complete"
+echo "================================================="
+echo ""
+echo "IMPORTANT NOTES:"
+echo "1. VmbPy has been installed with VmbC libraries included"
+echo "2. For USB cameras: Install full VimbaX SDK for transport layers"
+echo "3. For GigE cameras: Install full VimbaX SDK for transport layers"
+echo ""
+echo "To install full VimbaX SDK (recommended for production):"
+echo "1. Download VimbaX SDK from:"
+echo "   https://www.alliedvision.com/en/products/software.html"
+echo "2. Extract and run the installer according to documentation"
+echo ""
+echo "Test your installation:"
+echo "python3 -c \"import vmbpy; print('VmbPy installed successfully')\""
+echo ""
 
-# Install VimbaPython globally (or into whichever Python environment is active)
-cd /tmp/VimbaPython
-sudo python3 -m pip install . --break-system-packages
+# Create a simple test script
+cat > /tmp/test_vmbpy.py << 'EOF'
+#!/usr/bin/env python3
+import vmbpy
 
-# Remove the temporary copy
-cd /tmp
-sudo rm -rf /tmp/VimbaPython
+def test_vmbpy():
+    try:
+        vmb = vmbpy.VmbSystem.get_instance()
+        with vmb:
+            cameras = vmb.get_all_cameras()
+            print(f"VmbPy working! Found {len(cameras)} camera(s)")
+            for cam in cameras:
+                print(f"  Camera: {cam.get_name()} (ID: {cam.get_id()})")
+        return True
+    except Exception as e:
+        print(f"VmbPy test failed: {e}")
+        return False
 
-# If you need pymba for older code references (rarely needed with new VimbaPython):
-#   sudo python3 -m pip install pymba --break-system-packages
-
-# Example environment variable exports for a 64-bit Raspberry Pi with USB T/L in use
-# or for GigE T/L in /opt/Vimba_6_0/VimbaGigETL/CTI/arm_64bit.
-# We append them to ~/.bashrc to make them permanent for your user.
-# If you prefer them system-wide, put them in /etc/profile.d/xxx.sh
-cat >>~/.bashrc <<EOF
-
-# Vimba environment variables (added by install script)
-export GENICAM_GENTL64_PATH="/opt/Vimba_6_0/VimbaUSBTL/CTI/arm_64bit:\$GENICAM_GENTL64_PATH"
-# If using GigE, comment the line above and uncomment the line below:
-# export GENICAM_GENTL64_PATH="/opt/Vimba_6_0/VimbaGigETL/CTI/arm_64bit:\$GENICAM_GENTL64_PATH"
-
-export LD_LIBRARY_PATH="\$LD_LIBRARY_PATH:/opt/Vimba_6_0/VimbaC/DynamicLib/linux64"
+if __name__ == "__main__":
+    test_vmbpy()
 EOF
 
-echo "============================="
-echo " Vimba installation complete"
-echo "============================="
-echo "Please open a new terminal or 'source ~/.bashrc' so the environment variables take effect."
-echo "After that, you should be able to run 'python3' and use VimbaPython." # Export environment variable for GenTL detection (add to ~/.bashrc as needed)
+chmod +x /tmp/test_vmbpy.py
+echo "Test script created at /tmp/test_vmbpy.py"
+echo "Run: python3 /tmp/test_vmbpy.py"
 
-export GENICAM_GENTL64_PATH="${GENICAM_GENTL64_PATH:-}:/opt/Vimba_6_0/VimbaUSBTL/CTI/arm_64bit"
-
-echo "Vimba installation complete."
+echo ""
+echo "VimbaX installation complete!"
