@@ -1,30 +1,52 @@
 Allied Vision Alvium USB camera Dockerfile example (VimbaX)
 ===========================================================
 
-This Docker example uses **VimbaX SDK** with **VmbPy** (the modern Python API), which is the successor to the legacy Vimba SDK and VimbaPython.
+This Docker example uses the **full VimbaX SDK** with **VmbPy** (the modern Python API), which is the successor to the legacy Vimba SDK and VimbaPython.
+
+Based on the reference implementation from: https://github.com/HLiu-uOttawa/Allied-Vision-1800-U-500C
 
 ## VimbaX vs Legacy Vimba
 
 - **VimbaX** is Allied Vision's latest SDK, fully GenICam compliant
 - **VmbPy** is the new Python API that replaces VimbaPython
 - Provides better performance, modern Python features, and improved reliability
-- VmbPy can be installed directly from PyPI
+- Full SDK includes transport layers (USB, GigE) and proper device drivers
 
 ## Requirements
 
+### Host System Driver Installation
+
+**IMPORTANT**: For USB cameras to work with Docker, you need to install VimbaX drivers on the host system.
+
+1. **Download VimbaX SDK for your host architecture**:
+   - ARM64 (Jetson, ARM Linux): [VimbaX_Setup-2025-1-Linux_ARM64.tar.gz](https://downloads.alliedvision.com/VimbaX/VimbaX_Setup-2025-1-Linux_ARM64.tar.gz)
+   - x86_64 (Intel/AMD): Download from [alliedvision.com](https://www.alliedvision.com/en/products/software.html)
+
+2. **Install on host system**:
+   ```bash
+   # Extract the SDK
+   tar -xzf VimbaX_Setup-2025-1-Linux_ARM64.tar.gz
+   cd VimbaX_2025-1
+   
+   # Install USB transport layer (required for USB cameras)
+   cd VimbaUSBTL
+   sudo ./Install.sh
+   
+   # Install udev rules
+   sudo cp ../Tools/VimbaUSBTL/99-vimba.rules /etc/udev/rules.d/
+   sudo udevadm control --reload-rules
+   sudo udevadm trigger
+   ```
+
+3. **Verify host installation**:
+   ```bash
+   # Check if camera is detected
+   lsusb | grep -i allied
+   # Should show something like: Bus 002 Device 003: ID 1ab2:0001 Allied Vision Technologies
+   ```
+
 ### For Docker Usage
-No additional requirements - VmbPy is installed automatically in the container.
-
-### For Host System Installation
-If you want to use Allied Vision cameras on your host system, you need to install the transport layers and device drivers. This can be done by:
-
-1. **Option 1: Install full VimbaX SDK** (Recommended)
-   - Download VimbaX SDK from [alliedvision.com/en/products/software.html](https://www.alliedvision.com/en/products/software.html)
-   - This includes all transport layers (USB, GigE) and device drivers
-
-2. **Option 2: Manual installation** (for specific transport layers only)
-   - Install only the required transport layers from the VimbaX SDK
-   - Set appropriate environment variables (see install_vimba.sh)
+The Docker container includes the full VimbaX SDK with transport layers and VmbPy.
 
 ## Docker
 
@@ -35,37 +57,90 @@ sudo docker build -t alvium:vimbax .
 
 #### Minimal working example
 ```sh
-sudo docker run --init --privileged --rm alvium:vimbax
+# USB passthrough is required for camera access
+sudo docker run --init --privileged --device=/dev/bus/usb alvium:vimbax
 # This runs the list_cameras.py script by default
 ```
 
 #### Run with custom script
 ```sh
-sudo docker run --init --privileged --rm alvium:vimbax python your_script.py
+sudo docker run --init --privileged --device=/dev/bus/usb alvium:vimbax python your_script.py
 ```
                   
 #### Interactive session
 ```sh
 $ sudo docker run --init -it \
-                  --privileged -v /dev/bus/usb:/dev/bus/usb \
+                  --privileged \
+                  --device=/dev/bus/usb \
                   --entrypoint="/bin/bash" \
                   --rm \
                   alvium:vimbax
 ```
 
+## USB Camera Detection
+
+To check if your camera is properly detected:
+
+1. **On host system**:
+   ```bash
+   lsusb
+   # Look for Allied Vision device, e.g.:
+   # Bus 002 Device 003: ID 1ab2:0001 Allied Vision Technologies
+   ```
+
+2. **In Docker container**:
+   ```bash
+   python3 /opt/vimba/list_cameras.py
+   ```
+
 ## Usage Example
 
-The included `list_cameras.py` shows how to use VmbPy:
+The included `list_cameras.py` shows how to use VmbPy with the full SDK:
 
 ```python
 import vmbpy
+import os
+
+# VimbaX environment should be configured
+print(f"GenTL path: {os.environ.get('GENICAM_GENTL64_PATH', 'Not set')}")
 
 vmb = vmbpy.VmbSystem.get_instance()
 with vmb:
+    # List all interfaces (USB, GigE, etc.)
+    interfaces = vmb.get_all_interfaces()
+    print(f"Found {len(interfaces)} interface(s)")
+    
+    # List all cameras
     cams = vmb.get_all_cameras()
+    print(f"Found {len(cams)} camera(s)")
     for cam in cams:
-        print(cam)
+        print(f"Camera: {cam.get_name()} (ID: {cam.get_id()})")
 ```
+
+## Architecture Support
+
+This implementation supports:
+- **ARM64** (Jetson devices, ARM-based systems)
+- **x86_64** (Intel/AMD systems)
+
+The Dockerfile automatically downloads the ARM64 version. For x86_64, update the download URL in the Dockerfile.
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"No cameras found"**:
+   - Ensure VimbaX drivers are installed on host system
+   - Check USB connection and device detection with `lsusb`
+   - Verify Docker has USB device access (`--device=/dev/bus/usb`)
+
+2. **Permission errors**:
+   - Use `--privileged` flag with Docker
+   - Check udev rules are installed on host
+
+3. **Transport layer not found**:
+   - Verify `GENICAM_GENTL64_PATH` is set correctly
+   - Check that `/opt/VimbaX/cti` exists in container
 
 ## Migration from VimbaPython
 

@@ -1,23 +1,48 @@
 FROM python:3.9-slim
 
+# Prevent Python from writing .pyc files
 ENV PYTHONDONTWRITEBYTECODE=true
 
-# Install system dependencies
+# Define workspace path
+ENV WORKSPACE_PATH=/opt/vimba
+WORKDIR ${WORKSPACE_PATH}
+
+# Install system dependencies and utilities
 RUN apt-get update && apt-get install -y \
         udev \
         libusb-1.0-0 \
         ca-certificates \
+        usbutils \
+        wget \
+        tar \
+        vim \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install VmbPy from PyPI (VimbaX Python API)
-RUN python -m pip install --no-cache-dir vmbpy
+# Install VmbPy from PyPI (fallback for when full SDK cannot be downloaded)
+# This provides basic VimbaX functionality
+RUN python3 -m pip install --upgrade pip --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org \
+    && pip3 install vmbpy --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir
+
+# Set environment variables for VimbaX
+# Note: Full SDK installation would set GENICAM_GENTL64_PATH to /opt/VimbaX/cti
+# For now, this is left empty as PyPI VmbPy includes basic transport layers
+ENV GENICAM_GENTL64_PATH=""
 
 # Copy our test script
-COPY list_cameras.py /opt/
+COPY list_cameras.py ${WORKSPACE_PATH}/
 
-# Set working directory
-WORKDIR /opt
+# Create a note about the installation type
+RUN echo "VmbPy (PyPI version) installed" > /opt/vimba/installation_info.txt && \
+    echo "For full VimbaX SDK with transport layers:" >> /opt/vimba/installation_info.txt && \
+    echo "1. Download VimbaX_Setup-2025-1-Linux_ARM64.tar.gz" >> /opt/vimba/installation_info.txt && \
+    echo "2. Extract to /opt/VimbaX" >> /opt/vimba/installation_info.txt && \
+    echo "3. Run /opt/VimbaX/cti/Install_GenTL_Path.sh" >> /opt/vimba/installation_info.txt && \
+    echo "4. Install VmbPy from /opt/VimbaX/api/python" >> /opt/vimba/installation_info.txt && \
+    echo "5. Set GENICAM_GENTL64_PATH=/opt/VimbaX/cti" >> /opt/vimba/installation_info.txt
+
+# Set workspace as the default working directory
+WORKDIR ${WORKSPACE_PATH}
 
 # Set entrypoint to our test script by default
 ENTRYPOINT ["python", "list_cameras.py"]
