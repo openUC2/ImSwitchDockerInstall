@@ -6,10 +6,12 @@ sudo apt-get install -y git curl
 mkdir -p ~/Downloads
 mkdir -p ~/Desktop
 
+ARCH=$(uname -m)
+
 # Set timezone
 export TZ=America/Los_Angeles
 echo "Setting timezone to $TZ"
-sudo ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime && echo "$TZ" >/etc/timezone
+#sudo ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime && echo "$TZ" >/etc/timezone
 
 # Update and install necessary dependencies
 echo "Updating system and installing dependencies"
@@ -48,9 +50,15 @@ conda create -y --name imswitch311 python=3.11
 conda install -n imswitch311 -y -c conda-forge h5py numcodecs scikit-image
 conda clean --all -f -y
 
-# Clone the config folder
-echo "Cloning ImSwitchConfig"
-git clone https://github.com/openUC2/ImSwitchConfig ~/ImSwitchConfig
+# if ImSwitch Config already exists, skip this step
+if [ -d ~/ImSwitchConfig ]; then
+    echo "ImSwitchConfig already exists, skipping clone."
+else
+    echo "ImSwitchConfig does not exist, cloning repository."
+    # Clone the config folder
+    echo "Cloning ImSwitchConfig"
+    git clone https://github.com/openUC2/ImSwitchConfig ~/ImSwitchConfig
+fi
 
 # Clone the repository and install dependencies
 echo "Cloning and installing imSwitch"
@@ -74,7 +82,7 @@ source /opt/conda/bin/activate imswitch311 && pip install ome-zarr==0.9.0
 source /opt/conda/bin/activate imswitch311 && conda install -c conda-forge --strict-channel-priority numpy scikit-image==0.19.3 -y
 
 # fix numpy
-source /opt/conda/bin/activate imswitch311 && python3 -m pip install numpy==1.26.4
+source /opt/conda/bin/activate imswitch311 && python3 -m pip install numpy==1.26.4 --force-reinstall
 
 # Expose SSH port and HTTP port
 echo "Exposing ports 22, 8002 and 8001 and 8888"
