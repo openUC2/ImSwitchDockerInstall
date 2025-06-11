@@ -22,23 +22,33 @@ Based on the reference implementation from: https://github.com/HLiu-uOttawa/Alli
    - ARM64 (Jetson, ARM Linux): [VimbaX_Setup-2025-1-Linux_ARM64.tar.gz](https://downloads.alliedvision.com/VimbaX/VimbaX_Setup-2025-1-Linux_ARM64.tar.gz)
    - x86_64 (Intel/AMD): Download from [alliedvision.com](https://www.alliedvision.com/en/products/software.html)
 
-2. **Install on host system**:
+### 2. **Install on host system**:
+
+#### 2.1 Vimba X
    ```bash
    # Extract the SDK
-   tar -xzf VimbaX_Setup-2025-1-Linux_ARM64.tar.gz
-   cd VimbaX_2025-1
+   wget https://downloads.alliedvision.com/VimbaX/VimbaX_Setup-2025-1-Linux_ARM64.tar.gz
+   tar -xzf VimbaX_Setup-2025-1-Linux_ARM64.tar.gz 
+   sudo mv ./VimbaX_2025-1 /opt/VimbaX
+   rm VimbaX_Setup-2025-1-Linux_ARM64.tar.gz
+   cd  /opt/VimbaX/cti
+   chmod +x ./Install_GenTL_Path.sh   
+   sudo ./Install_GenTL_Path.sh   
    
-   # Install USB transport layer (required for USB cameras)
-   cd VimbaUSBTL
-   sudo ./Install.sh
-   
-   # Install udev rules
-   sudo cp ../Tools/VimbaUSBTL/99-vimba.rules /etc/udev/rules.d/
-   sudo udevadm control --reload-rules
-   sudo udevadm trigger
+   sudo reboot
    ```
 
-3. **Verify host installation**:
+#### 2.2 Vimba 6.0
+```bash
+   wget https://downloads.alliedvision.com/Vimba64_v6.0_Linux.tgz
+   sudo tar -xzf Vimba64_v6.0_Linux.tgz -C /opt 
+   rm Vimba64_v6.0_Linux.tgz 
+   mkdir -p /etc/udev/rules.d 
+   cd /opt/Vimba_6_0/VimbaUSBTL/ 
+   sudo ./Install.sh
+```
+
+## 3. **Verify host installation**:
    ```bash
    # Check if camera is detected
    lsusb | grep -i allied
