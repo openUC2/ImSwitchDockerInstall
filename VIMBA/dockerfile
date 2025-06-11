@@ -1,50 +1,61 @@
-FROM        continuumio/miniconda3:4.8.2
+FROM python:3.9-slim
 
-ENV         PYTHONDONTWRITEBYTECODE=true
-
-# Copy the locally downloaded Vimba package, there is no direct access link for download, from
-# https://www.alliedvision.com/en/products/software.html
-
-FROM continuumio/miniconda3:4.8.2
-
+# Prevent Python from writing .pyc files
 ENV PYTHONDONTWRITEBYTECODE=true
 
-# Copy the locally downloaded Vimba package, there is no direct access link for download, from
-# https://www.alliedvision.com/en/products/software.html
+# Define workspace path
+ENV WORKSPACE_PATH=/opt/vimba
+WORKDIR ${WORKSPACE_PATH}
 
-RUN sed -i 's/buster/oldoldstable/g' /etc/apt/sources.list && \
-    apt-get update && apt-get install -y \
+# Install system dependencies and utilities
+RUN apt-get update && apt-get install -y \
+        udev \
+        libusb-1.0-0 \
+        ca-certificates \
+        usbutils \
         wget \
         tar \
+        vim \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget https://downloads.alliedvision.com/Vimba64_v6.0_Linux.tgz && \
-    tar -xzf Vimba64_v6.0_Linux.tgz -C /opt && \
-    rm Vimba64_v6.0_Linux.tgz && \
-    mkdir -p /etc/udev/rules.d && \
-    cd /opt/Vimba_6_0/VimbaUSBTL/ && \
-    ./Install.sh
+# Copy pre-downloaded VimbaX SDK (requires manual download due to network restrictions)
+# To use this dockerfile:
+# 1. Download VimbaX_Setup-2025-1-Linux_ARM64.tar.gz from:
+#    https://downloads.alliedvision.com/VimbaX/VimbaX_Setup-2025-1-Linux_ARM64.tar.gz
+# 2. Place it in the same directory as this dockerfile
+# 3. Build with: docker build -f dockerfile.full-sdk -t alvium:vimbax-full .
+RUN wget --no-check-certificate https://downloads.alliedvision.com/VimbaX/VimbaX_Setup-2025-1-Linux_ARM64.tar.gz -O VimbaX_Setup-2025-1-Linux_ARM64.tar.gz || \
+    echo "VimbaX SDK download failed. Please ensure the file is present in the build context."
+# COPY VimbaX_Setup-2025-1-Linux_ARM64.tar.gz .
 
-RUN       cd /opt/Vimba_6_0/VimbaUSBTL/ \
-            && cd ../VimbaPython/Source/ \
-            && python -m pip install . \
-            && cd .. \
-            && rm -rf VimbaGigETL \
-            && rm -rf VimbaCPP \
-            && rm -rf /opt/Vimba_6_0/VimbaC/DynamicLib/x86_32bit \
-            && rm -rf /opt/Vimba_6_0/VimbaCPP/DynamicLib/x86_32bit \
-            && rm -rf /opt/Vimba_6_0/VimbaImageTransform/DynamicLib/x86_32bit \
-            && rm -rf /opt/Vimba_6_0/Tools/Viewer \
-            && rm -rf /opt/Vimba_6_0/Tools/VimbaClassGenerator/Bin/x86_32bit \
-            && rm -rf /opt/Vimba_6_0/Tools/FirmwareUpdater/Bin/x86_32bit \
-            && rm -rf /opt/Vimba_6_0/VimbaC/Examples/Bin/x86_32bit \
-            && rm -rf /opt/Vimba_6_0/VimbaCPP/Examples/Bin/x86_32bit \
-            && rm -rf /opt/Vimba_6_0/VimbaUSBTL/CTI/x86_32bit \
-            && rm -rf /opt/Vimba_6_0/VimbaGigETL/CTI/x86_32bit
+# Extract and install VimbaX SDK
+RUN tar -xzf VimbaX_Setup-2025-1-Linux_ARM64.tar.gz -C /opt \
+    && mv /opt/VimbaX_2025-1 /opt/VimbaX \
+    && rm VimbaX_Setup-2025-1-Linux_ARM64.tar.gz
 
-ENV         GENICAM_GENTL64_PATH=$GENICAM_GENTL64_PATH:"/opt/Vimba_6_0/VimbaUSBTL/CTI/x86_64bit"
+# Run VimbaX GenTL installation script
+WORKDIR /opt/VimbaX/cti
+RUN ./Install_GenTL_Path.sh
 
-WORKDIR     /opt/Vimba_6_0/VimbaPython/Examples
+# Install VmbPy from the included wheel file
+WORKDIR /opt/VimbaX/api/python
+RUN python3 -m pip install --upgrade pip --no-cache-dir \
+    && find . -name "vmbpy-*.whl" -exec pip3 install {} --no-cache-dir \;
 
-ENTRYPOINT  ["python"]
+# Set environment variables for VimbaX
+ENV GENICAM_GENTL64_PATH="/opt/VimbaX/cti"
+
+# Copy our test script
+COPY list_cameras.py ${WORKSPACE_PATH}/
+
+# Create installation info
+RUN echo "Full VimbaX SDK installed" > /opt/vimba/installation_info.txt && \
+    echo "GenTL Path: /opt/VimbaX/cti" >> /opt/vimba/installation_info.txt && \
+    echo "VmbPy installed from SDK wheel" >> /opt/vimba/installation_info.txt
+
+# Set workspace as the default working directory
+WORKDIR ${WORKSPACE_PATH}
+
+# Set entrypoint to our test script by default
+ENTRYPOINT ["python", "list_cameras.py"]
