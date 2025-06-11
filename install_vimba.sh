@@ -30,7 +30,6 @@ sudo ./Install_GenTL_Path.sh
 
 # Set environment variables permanently
 echo "Setting up environment variables..."
-sudo tee /etc/environment > /dev/null << EOF
 GENICAM_GENTL64_PATH="/opt/VimbaX/cti"
 EOF
 
