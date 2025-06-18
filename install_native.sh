@@ -82,11 +82,11 @@ source /opt/conda/bin/activate imswitch311 && mamba install -c conda-forge --str
 source /opt/conda/bin/activate imswitch311 && python3 -m pip install numpy==1.26.4 --force-reinstall
 
 # Expose SSH port and HTTP port
-echo "Exposing ports 22, 8002 and 8001 and 8888"
-sudo ufw allow 22
-sudo ufw allow 8001
-sudo ufw allow 8002
-sudo ufw allow 8888
+#echo "Exposing ports 22, 8002 and 8001 and 8888"
+#sudo ufw allow 22
+#sudo ufw allow 8001
+#sudo ufw allow 8002
+#sudo ufw allow 8888
 
 echo "Installation complete. To run the application, use the following command:"
 echo "source /opt/conda/bin/activate imswitch311 && python3 ~/ImSwitch/main.py --headless --http-port 8001"
