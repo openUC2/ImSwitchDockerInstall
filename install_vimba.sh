@@ -29,8 +29,7 @@ echo "Installing GenTL transport layer..."
 
 # Set environment variables permanently
 echo "Setting up environment variables..."
-GENICAM_GENTL64_PATH="/opt/VimbaX/cti"
-EOF
+sudo bash -c 'echo "export GENICAM_GENTL64_PATH=/opt/VimbaX/cti" > /etc/profile.d/vimbax.sh'
 
 # Add to current session
 export GENICAM_GENTL64_PATH="/opt/VimbaX/cti"
