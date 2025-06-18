@@ -16,7 +16,7 @@ VIMBA_DIR="/opt/VimbaX"
 
 echo "Downloading VimbaX SDK..."
 cd /tmp
-wget https://downloads.alliedvision.com/VimbaX/VimbaX_Setup-2025-1-Linux_ARM64.tar.gz
+wget https://downloads.alliedvision.com/VimbaX/VimbaX_Setup-2025-1-Linux_ARM64.tar.gz 
 
 echo "Extracting VimbaX SDK..."
 sudo tar -xzf VimbaX_Setup-2025-1-Linux_ARM64.tar.gz -C ${INSTALL_DIR}
@@ -24,9 +24,8 @@ sudo mv ${INSTALL_DIR}/VimbaX_2025-1 ${VIMBA_DIR}
 rm VimbaX_Setup-2025-1-Linux_ARM64.tar.gz
 cd  /opt/VimbaX/cti
 echo "Installing GenTL transport layer..."
-chmod +x ./Install_GenTL_Path.sh   
-sudo ./Install_GenTL_Path.sh   
-
+#chmod +x ./Install_GenTL_Path.sh   # TODO: THIS FAILS WITH: chmod: changing permissions of './Install_GenTL_Path.sh': Operation not permitted @ethanjli -any idea why?
+#sudo ./Install_GenTL_Path.sh   
 
 # Set environment variables permanently
 echo "Setting up environment variables..."
@@ -35,27 +34,3 @@ EOF
 
 # Add to current session
 export GENICAM_GENTL64_PATH="/opt/VimbaX/cti"
-
-echo "VimbaX SDK installation complete!"
-
-echo ""
-echo "================================================="
-echo " VimbaX SDK Installation Complete"
-echo "================================================="
-echo ""
-echo "IMPORTANT NOTES:"
-echo "1. Full VimbaX SDK has been installed with transport layers"
-echo "2. GenTL path configured: /opt/VimbaX/cti"
-echo "3. VmbPy installed from included wheel file"
-echo ""
-echo "HOST SYSTEM REQUIREMENTS:"
-echo "The Docker container requires USB passthrough from the host."
-echo "On the host system, you may need to:"
-echo "1. Install appropriate USB drivers for your camera"
-echo "2. Set up udev rules for camera access"
-echo "3. Ensure the user has access to USB devices"
-echo ""
-echo "For USB camera access in Docker, use:"
-echo "docker run --privileged --device=/dev/bus/usb <image>"
-echo ""
-
