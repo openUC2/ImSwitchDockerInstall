@@ -26,7 +26,6 @@ sudo mv ${INSTALL_DIR}/VimbaX_2025-1 ${VIMBA_DIR}
 rm VimbaX_Setup-2025-1-Linux_ARM64.tar.gz
 cd  /opt/VimbaX/cti
 echo "Installing GenTL transport layer..."
-#chmod +x ./Install_GenTL_Path.sh   # TODO: THIS FAILS WITH: chmod: changing permissions of './Install_GenTL_Path.sh': Operation not permitted @ethanjli -any idea why?
 sudo bash ./Install_GenTL_Path.sh
 
 # Set environment variables permanently
