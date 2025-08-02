@@ -14,6 +14,8 @@ sudo apt-get install -y python3 python3-pip libusb-1.0-0  wget tar
 INSTALL_DIR="/opt"
 VIMBA_DIR="/opt/VimbaX"
 
+
+
 echo "Downloading VimbaX SDK..."
 cd /tmp
 wget https://downloads.alliedvision.com/VimbaX/VimbaX_Setup-2025-1-Linux_ARM64.tar.gz 
@@ -25,7 +27,7 @@ rm VimbaX_Setup-2025-1-Linux_ARM64.tar.gz
 cd  /opt/VimbaX/cti
 echo "Installing GenTL transport layer..."
 #chmod +x ./Install_GenTL_Path.sh   # TODO: THIS FAILS WITH: chmod: changing permissions of './Install_GenTL_Path.sh': Operation not permitted @ethanjli -any idea why?
-#sudo ./Install_GenTL_Path.sh   
+sudo bash ./Install_GenTL_Path.sh
 
 # Set environment variables permanently
 echo "Setting up environment variables..."
