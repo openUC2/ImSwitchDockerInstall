@@ -11,7 +11,7 @@ ls -lh
 # store under /tmp/hikdriver.zip
 echo "Install Hik Driver"
 wget https://github.com/openUC2/ImSwitchDockerInstall/releases/download/imswitch-master/MVS-3.0.1_aarch64_20241128.deb 
-dpkg -i MVS-3.0.1_aarch64_20241128.deb 
+sudo dpkg -i MVS-3.0.1_aarch64_20241128.deb 
 cd /opt/MVS/Samples/aarch64/Python/
 cp GrabImage/GrabImage.py MvImport/GrabImage.py
 export MVCAM_COMMON_RUNENV=/opt/MVS/lib
