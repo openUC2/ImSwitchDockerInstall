@@ -205,7 +205,8 @@ jobs:
           # Create Docker scripts
           cat << 'SCRIPT1' > "$DESKTOP_PATH/update_docker_container.sh"
           #!/bin/bash
-          sudo docker pull ghcr.io/openuc2/imswitch-noqt-arm64:latest
+          ARCH=$(uname -m | sed 's/aarch64/arm64/; s/x86_64/amd64/')
+          sudo docker pull ghcr.io/openuc2/imswitch-noqt-$ARCH:latest
           SCRIPT1
 
           cat << 'SCRIPT2' > "$DESKTOP_PATH/launch_docker_container.sh"
@@ -222,7 +223,7 @@ jobs:
             -e HTTP_PORT=8001 \
             -e UPDATE_INSTALL_GIT=0 \
             -e UPDATE_CONFIG=0 \
-            --privileged ghcr.io/openuc2/imswitch-noqt-arm64:latest
+            --privileged ghcr.io/openuc2/imswitch-noqt-$(uname -m | sed 's/aarch64/arm64/; s/x86_64/amd64/'):latest
           SCRIPT2
 
           chmod +x "$DESKTOP_PATH/"*.sh
