@@ -11,9 +11,6 @@ echo "Install Docker"
 chmod +x install_docker_raspi.sh
 ./install_docker_raspi.sh
 
-echo "Clone ImSwitchConfig"
-chmod +x git_clone_imswitchconfig.sh
-./git_clone_imswitchconfig.sh
 
 mkdir -p /etc/udev/rules.d
 sudo mv /usr/lib/python3.11/EXTERNALLY-MANAGED /usr/lib/python3.11/EXTERNALLY-MANAGED.old

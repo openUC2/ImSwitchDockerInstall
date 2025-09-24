@@ -40,8 +40,6 @@ git clone https://github.com/openUC2/imSwitch /tmp/ImSwitch
 git clone https://github.com/openUC2/UC2-REST /tmp/UC2-REST
 /opt/conda/bin/conda run -n imswitch pip install -e /tmp/UC2-REST
 
-# Clone the ImSwitch config repository
-git clone https://github.com/openUC2/ImSwitchConfig /root/ImSwitchConfig
 
 # Always pull the latest version of repositories
 cd /tmp/ImSwitch && git pull

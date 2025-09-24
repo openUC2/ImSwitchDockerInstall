@@ -15,8 +15,6 @@ echo "Install Docker"
 echo "Pull and Install Docker Image"
 ./pull_and_run.sh
 
-echo "Clone ImSwitchConfig"
-./git_clone_imswitchconfig.sh
 
 echo "Install HIK Driver"
 ./install_hikdriver.sh
