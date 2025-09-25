@@ -118,8 +118,20 @@ jobs:
           # --- Daheng ---
           wget -O Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz \
             https://dahengimaging.com/downloads/Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz
-          wget -O Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip \
-            https://dahengimaging.com/downloads/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip
+          
+          # Auto-detect architecture for Daheng driver
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "aarch64" ]; then
+              DAHENG_ZIP="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip"
+              DAHENG_URL="https://github.com/openUC2/ImSwitchDockerInstall/releases/download/imswitch-master/${DAHENG_ZIP}"
+          elif [ "$ARCH" = "x86_64" ]; then
+              DAHENG_ZIP="Galaxy_Linux-x86_Gige-U3_32bits-64bits_2.4.2503.9201.zip"
+              DAHENG_URL="https://dahengimaging.com/downloads/${DAHENG_ZIP}"
+          else
+              DAHENG_ZIP="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip"
+              DAHENG_URL="https://github.com/openUC2/ImSwitchDockerInstall/releases/download/imswitch-master/${DAHENG_ZIP}"
+          fi
+          wget -O "$DAHENG_ZIP" "$DAHENG_URL"
 
           # --- Hik (MVS) driver zip ---
           cd /opt/camera-drivers
@@ -129,7 +141,16 @@ jobs:
 
           mkdir -p /opt/camera-drivers/MVS_STD_V3.0.1_240902
           unzip MVS_STD_V3.0.1_240902.zip -d /opt/camera-drivers/MVS_STD_V3.0.1_240902
-          mv /opt/camera-drivers/MVS_STD_V3.0.1_240902/MVS-3.0.1_aarch64_20240902.deb /opt/camera-drivers/MVS-3.0.1_aarch64_20240902.deb
+          # Auto-detect architecture for MVS driver
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "aarch64" ]; then
+              MVS_DEB="MVS-3.0.1_aarch64_20240902.deb"
+          elif [ "$ARCH" = "x86_64" ]; then
+              MVS_DEB="MVS-3.0.1_x86_64_20240902.deb"
+          else
+              MVS_DEB="MVS-3.0.1_aarch64_20240902.deb"  # fallback
+          fi
+          mv /opt/camera-drivers/MVS_STD_V3.0.1_240902/${MVS_DEB} /opt/camera-drivers/${MVS_DEB}
           rm -r /opt/camera-drivers/MVS_STD_V3.0.1_240902
           rm -r /opt/camera-drivers/MVS_STD_V3.0.1_240902.zip
 
@@ -150,13 +171,23 @@ jobs:
 
           # A) Install HIK/MVS driver
           cd "$DRIVER_DIR"
-          # Check if .deb is inside the unzipped folder:
-          if [ -f MVS-3.0.1_aarch64_20240902.deb ]; then
-            dpkg -i MVS-3.0.1_aarch64_20240902.deb || true
-            # Optionally remove the .deb after install if you like
-            # rm -f MVS-3.0.1_aarch64_20240902.deb
+          # Auto-detect architecture for MVS driver
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "aarch64" ]; then
+              MVS_DEB="MVS-3.0.1_aarch64_20240902.deb"
+          elif [ "$ARCH" = "x86_64" ]; then
+              MVS_DEB="MVS-3.0.1_x86_64_20240902.deb"
           else
-            echo "[WARN] MVS .deb not found after unzipping. Check folder contents."
+              MVS_DEB="MVS-3.0.1_aarch64_20240902.deb"  # fallback
+          fi
+          
+          # Check if .deb is available:
+          if [ -f "$MVS_DEB" ]; then
+            dpkg -i "$MVS_DEB" || true
+            # Optionally remove the .deb after install if you like
+            # rm -f "$MVS_DEB"
+          else
+            echo "[WARN] MVS .deb ($MVS_DEB) not found after unzipping. Check folder contents."
           fi
 
           # If the MVS install has a GrabImage.py
@@ -172,10 +203,19 @@ jobs:
           # B) Install Daheng driver
           echo "[FIRST BOOT] Installing Daheng driver..."
           cd "$DRIVER_DIR"
-          unzip Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip || true
+          unzip "$DAHENG_ZIP" || true
           tar -zxvf Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz || true
 
-          cd $DRIVER_DIR/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202
+          # Determine directory name based on architecture
+          if [ "$ARCH" = "aarch64" ]; then
+              DAHENG_DIR="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202"
+          elif [ "$ARCH" = "x86_64" ]; then
+              DAHENG_DIR="Galaxy_Linux-x86_Gige-U3_32bits-64bits_2.4.2503.9201"
+          else
+              DAHENG_DIR="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202"
+          fi
+
+          cd "$DRIVER_DIR/$DAHENG_DIR"
           chmod +x Galaxy_camera.run
 
           # Build & install the Python API
@@ -184,10 +224,10 @@ jobs:
           python3 setup.py install
 
           # Auto-enter the Daheng run script
-          echo "Y En Y" | $DRIVER_DIR/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202/Galaxy_camera.run || true
+          echo "Y En Y" | "$DRIVER_DIR/$DAHENG_DIR/Galaxy_camera.run" || true
 
           # Set library path
-          echo 'export LD_LIBRARY_PATH=/usr/lib:'$DRIVER_DIR'/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202:$LD_LIBRARY_PATH' >> /etc/profile
+          echo "export LD_LIBRARY_PATH=/usr/lib:$DRIVER_DIR/$DAHENG_DIR:\$LD_LIBRARY_PATH" >> /etc/profile
 
           # Install extra Python packages
           pip3 install --break-system-packages pillow numpy

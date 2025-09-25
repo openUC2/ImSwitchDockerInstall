@@ -26,28 +26,35 @@ RUN apt-get update && apt-get install -y \
 # Create the udev rules directory
 RUN mkdir -p /etc/udev/rules.d
 
-# Download and install the appropriate Hik driver based on architecture
+# Download and install the appropriate Daheng driver based on architecture
 RUN cd /tmp && \
     wget https://dahengimaging.com/downloads/Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz && \
-    wget https://dahengimaging.com/downloads/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip && \
-    unzip Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip && \
+    ARCH=$(uname -m) && \
+    if [ "$ARCH" = "aarch64" ]; then \
+        DAHENG_ZIP="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip" && \
+        DAHENG_URL="https://github.com/openUC2/ImSwitchDockerInstall/releases/download/imswitch-master/${DAHENG_ZIP}" && \
+        DAHENG_DIR="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202"; \
+    elif [ "$ARCH" = "x86_64" ]; then \
+        DAHENG_ZIP="Galaxy_Linux-x86_Gige-U3_32bits-64bits_2.4.2503.9201.zip" && \
+        DAHENG_URL="https://dahengimaging.com/downloads/${DAHENG_ZIP}" && \
+        DAHENG_DIR="Galaxy_Linux-x86_Gige-U3_32bits-64bits_2.4.2503.9201"; \
+    else \
+        DAHENG_ZIP="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip" && \
+        DAHENG_URL="https://github.com/openUC2/ImSwitchDockerInstall/releases/download/imswitch-master/${DAHENG_ZIP}" && \
+        DAHENG_DIR="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202"; \
+    fi && \
+    wget "$DAHENG_URL" && \
+    unzip "$DAHENG_ZIP" && \
     tar -zxvf Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz && \
-    cd Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202 && \
+    cd "$DAHENG_DIR" && \
     chmod +x Galaxy_camera.run && \
     cd /tmp/Galaxy_Linux_Python_2.0.2106.9041/api && \
     python3 setup.py build && \
-    python3 setup.py install
+    python3 setup.py install && \
+    echo "Y En Y" | "/tmp/$DAHENG_DIR/Galaxy_camera.run"
 
-# Run the installer script using expect to automate Enter key presses
-RUN echo "Y En Y" | /tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202/Galaxy_camera.run
-
-# Copy libgxiapi.so to /usr/lib and set the library path
-#RUN cp /usr/lib/libgxiapi.so /usr/lib && \
-#    cp /tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202/libgxiapi.so /usr/lib && \
-#    ldconfig
-
-# Ensure the library path is set
-ENV LD_LIBRARY_PATH="/usr/lib:/tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202:$LD_LIBRARY_PATH"
+# Set environment variable for library path (will be set at runtime based on architecture)
+# Note: The actual path will be determined by the architecture detected during build
 
 RUN pip install pillow numpy
 

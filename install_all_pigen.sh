@@ -17,8 +17,23 @@ sudo mv /usr/lib/python3.11/EXTERNALLY-MANAGED /usr/lib/python3.11/EXTERNALLY-MA
 
 # Download and install the appropriate Hik/daheng driver based on architecture
 cd /tmp
+
+# Auto-detect architecture for Daheng driver
+ARCH=$(uname -m)
+if [ "$ARCH" = "aarch64" ]; then
+    DAHENG_ZIP="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip"
+    DAHENG_URL="https://github.com/openUC2/ImSwitchDockerInstall/releases/download/imswitch-master/${DAHENG_ZIP}"
+elif [ "$ARCH" = "x86_64" ]; then
+    DAHENG_ZIP="Galaxy_Linux-x86_Gige-U3_32bits-64bits_2.4.2503.9201.zip"
+    DAHENG_URL="https://dahengimaging.com/downloads/${DAHENG_ZIP}"
+else
+    # Fallback to ARM version
+    DAHENG_ZIP="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip"
+    DAHENG_URL="https://github.com/openUC2/ImSwitchDockerInstall/releases/download/imswitch-master/${DAHENG_ZIP}"
+fi
+
 wget https://dahengimaging.com/downloads/Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz
-wget https://dahengimaging.com/downloads/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip
+wget "$DAHENG_URL"
 cd /tmp
 wget https://www.hikrobotics.com/en2/source/vision/video/2024/9/3/MVS_STD_V3.0.1_240902.zip
 
@@ -43,14 +58,29 @@ cat <<'EOF' >/usr/local/bin/first_boot_setup.sh
 # it disables itself so it won't run on subsequent boots.
 
 #--------------------------------------------
-# STEP A.1: Install MVS driver (arm64) at FIRST BOOT
+# STEP A.1: Install MVS driver (auto-detect architecture) at FIRST BOOT
 #--------------------------------------------
 echo "Installing MVS driver..."
-dpkg -i /tmp/MVS-3.0.1_aarch64_20240902.deb || true
+ARCH=$(uname -m)
+if [ "$ARCH" = "aarch64" ]; then
+    MVS_DEB="/tmp/MVS-3.0.1_aarch64_20240902.deb"
+    MVS_SAMPLE_PATH="aarch64"
+elif [ "$ARCH" = "x86_64" ]; then
+    MVS_DEB="/tmp/MVS-3.0.1_x86_64_20240902.deb"
+    MVS_SAMPLE_PATH="64"
+else
+    echo "Unsupported architecture: $ARCH"
+    MVS_DEB="/tmp/MVS-3.0.1_aarch64_20240902.deb"  # fallback
+    MVS_SAMPLE_PATH="aarch64"
+fi
+
+if [ -f "$MVS_DEB" ]; then
+    dpkg -i "$MVS_DEB" || true
+fi
 
 echo "Copying GrabImage.py..."
-if [ -d /opt/MVS/Samples/aarch64/Python/ ]; then
-  cd /opt/MVS/Samples/aarch64/Python/
+if [ -d "/opt/MVS/Samples/${MVS_SAMPLE_PATH}/Python/" ]; then
+  cd "/opt/MVS/Samples/${MVS_SAMPLE_PATH}/Python/"
   cp GrabImage/GrabImage.py MvImport/GrabImage.py || true
 fi
 
@@ -64,11 +94,20 @@ echo 'export LD_LIBRARY_PATH=/opt/MVS/lib/64:/opt/MVS/lib/32:$LD_LIBRARY_PATH' >
 #--------------------------------------------
 
 cd /tmp
-unzip Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip
+unzip "$DAHENG_ZIP"
 tar -zxvf Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz
 
+# Determine directory name based on architecture
+if [ "$ARCH" = "aarch64" ]; then
+    DAHENG_DIR="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202"
+elif [ "$ARCH" = "x86_64" ]; then
+    DAHENG_DIR="Galaxy_Linux-x86_Gige-U3_32bits-64bits_2.4.2503.9201"
+else
+    DAHENG_DIR="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202"  # fallback
+fi
+
 # Set permissions and install the Galaxy camera driver
-cd Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202
+cd "$DAHENG_DIR"
 chmod +x Galaxy_camera.run
 
 # Build and install the Python API
@@ -77,10 +116,10 @@ python3 setup.py build
 python3 setup.py install
 
 # Run the installer script using expect to automate Enter key presses
-echo "Y En Y" | sudo /tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202/Galaxy_camera.run
+echo "Y En Y" | sudo "/tmp/$DAHENG_DIR/Galaxy_camera.run"
 
 # Set the library path
-export LD_LIBRARY_PATH="/usr/lib:/tmp/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="/usr/lib:/tmp/$DAHENG_DIR:$LD_LIBRARY_PATH"
 
 # Install Python packages
 pip3 install pillow numpy

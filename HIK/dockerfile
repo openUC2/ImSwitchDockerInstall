@@ -49,7 +49,5 @@ ENV LD_LIBRARY_PATH=/opt/MVS/lib/64:/opt/MVS/lib/32:$LD_LIBRARY_PATH
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-RUN tar -xzvf /tmp/MVS-3.0.1_x86_64_20240902
-
 CMD exec bash
 # CMD ["/entrypoint.sh"]
