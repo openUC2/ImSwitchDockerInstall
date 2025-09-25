@@ -29,10 +29,26 @@ cd /tmp
 
 # Download SDKs
 wget https://dahengimaging.com/downloads/Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz
-wget https://dahengimaging.com/downloads/Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip
+
+# Auto-detect architecture for Daheng driver
+ARCH=$(uname -m)
+if [ "$ARCH" = "aarch64" ]; then
+    DAHENG_ZIP="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip"
+    DAHENG_URL="https://github.com/openUC2/ImSwitchDockerInstall/releases/download/imswitch-master/${DAHENG_ZIP}"
+    DAHENG_DIR="Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202"
+elif [ "$ARCH" = "x86_64" ]; then
+    DAHENG_ZIP="Galaxy_Linux-x86_Gige-U3_32bits-64bits_2.4.2503.9201.zip"
+    DAHENG_URL="https://dahengimaging.com/downloads/${DAHENG_ZIP}"
+    DAHENG_DIR="Galaxy_Linux-x86_Gige-U3_32bits-64bits_2.4.2503.9201"
+else
+    echo "Unsupported architecture: $ARCH"
+    exit 1
+fi
+
+wget "$DAHENG_URL"
 
 # Extract
-unzip Galaxy_Linux-armhf_Gige-U3_32bits-64bits_1.5.2303.9202.zip
+unzip "$DAHENG_ZIP"
 tar -zxvf Galaxy_Linux_Python_2.0.2106.9041.tar_1.gz
 
 # Build and install Python API
