@@ -42,7 +42,7 @@ And then
 ```bash
 # Auto-detect architecture (ARM64 or AMD64)
 ARCH=$(uname -m | sed 's/aarch64/arm64/; s/x86_64/amd64/')
-sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -p 8888:8888 -e HEADLESS=1  -e HTTP_PORT=8001    -e UPDATE_GIT=1  -e UPDATE_CONFIG=0  -e CONFIG_PATH=/config   -v ~/Downloads:/config --privileged -e DATA_PATH=/dataset  -v /media/uc2/SD2:/dataset  ghcr.io/openuc2/imswitch-noqt-$ARCH:latest
+sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -p 8888:8888 -e HEADLESS=1  -e HTTP_PORT=8001    -e UPDATE_GIT=1  -e UPDATE_CONFIG=0  -e CONFIG_PATH=/config   -v ~/Downloads:/config --privileged -e DATA_PATH=/dataset  -v /media/uc2/SD2:/dataset  ghcr.io/openuc2/imswitch-noqt:latest
 ```
 
 - `-v ~/Downloads:/config` corresponds to the Github ImSwitchConfig folder that was downloaded and used for ImSwitch
@@ -69,16 +69,13 @@ chmod +x uninstall_service.sh
 ```bash
 # Auto-detect architecture and run appropriate image
 ARCH=$(uname -m | sed 's/aarch64/arm64/; s/x86_64/amd64/')
-sudo docker run -it --rm -p 8001:8001 -p 8003:8002 -p 2222:22 -p 8889:8888 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_virtual_microscope.json -e UPDATE_GIT=0 -e UPDATE_CONFIG=0 -v ~/:/config -e CONFIG_PATH=/config -e ssl=0 --privileged ghcr.io/openuc2/imswitch-noqt-$ARCH:latest
+sudo docker run -it --rm -p 8001:8001 -p 8003:8002 -p 2222:22 -p 8889:8888 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_virtual_microscope.json -e UPDATE_GIT=0 -e UPDATE_CONFIG=0 -v ~/:/config -e CONFIG_PATH=/config -e ssl=0 --privileged ghcr.io/openuc2/imswitch-noqt:latest
 ```
 
 Manual selection (if needed):
 ```bash
-# For AMD64/x86_64
-sudo docker run -it --rm -p 8001:8001 -p 8003:8002 -p 2222:22 -p 8889:8888 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_virtual_microscope.json -e UPDATE_GIT=0 -e UPDATE_CONFIG=0 -v ~/:/config -e CONFIG_PATH=/config -e ssl=0 --privileged ghcr.io/openuc2/imswitch-noqt-amd64:latest
-
-# For ARM64/aarch64
-sudo docker run -it --rm -p 8001:8001 -p 8003:8002 -p 2222:22 -p 8889:8888 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_virtual_microscope.json -e UPDATE_GIT=0 -e UPDATE_CONFIG=0 -v ~/:/config -e CONFIG_PATH=/config -e ssl=0 --privileged ghcr.io/openuc2/imswitch-noqt-arm64:latest
+# Universal image (works for all architectures)
+sudo docker run -it --rm -p 8001:8001 -p 8003:8002 -p 2222:22 -p 8889:8888 -e HEADLESS=1 -e HTTP_PORT=8001 -e CONFIG_FILE=example_virtual_microscope.json -e UPDATE_GIT=0 -e UPDATE_CONFIG=0 -v ~/:/config -e CONFIG_PATH=/config -e ssl=0 --privileged ghcr.io/openuc2/imswitch-noqt:latest
 ```
 
 

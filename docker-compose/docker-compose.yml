@@ -1,7 +1,7 @@
 version: '3'
 services:
   imswitch:
-    image: ghcr.io/openuc2/imswitch-noqt-amd64:latest
+    image: ghcr.io/openuc2/imswitch-noqt:latest
     container_name: imswitch
     ports:
       - 8001:8001

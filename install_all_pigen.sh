@@ -148,7 +148,7 @@ cat << 'SCRIPT1' > "$DESKTOP_PATH/update_docker_container.sh"
 #!/bin/bash
 # Pull the latest version of the docker container
 ARCH=$(uname -m | sed 's/aarch64/arm64/; s/x86_64/amd64/')
-sudo docker pull ghcr.io/openuc2/imswitch-noqt-$ARCH:latest
+sudo docker pull ghcr.io/openuc2/imswitch-noqt:latest
 SCRIPT1
 
 cat << 'SCRIPT2' > "$DESKTOP_PATH/launch_docker_container.sh"
@@ -166,7 +166,7 @@ docker run -it --rm \
   -e HTTP_PORT=8001 \
   -e UPDATE_INSTALL_GIT=0 \
   -e UPDATE_CONFIG=0 \
-  --privileged ghcr.io/openuc2/imswitch-noqt-$(uname -m | sed 's/aarch64/arm64/; s/x86_64/amd64/'):latest
+  --privileged ghcr.io/openuc2/imswitch-noqt:latest
 SCRIPT2
 
 chmod +x "$DESKTOP_PATH/update_docker_container.sh" "$DESKTOP_PATH/launch_docker_container.sh"
@@ -246,7 +246,7 @@ nohup docker run --rm -d -p 8001:8001 -p 8002:8002 -p 8888:8888 -p 2222:22 \
   -v ~/imswitch_docker/imswitch_git:/tmp/ImSwitch-changes \
   -v ~/imswitch_docker/imswitch_pip:/persistent_pip_packages \
   -v ~/:/config \
-  --privileged ghcr.io/openuc2/imswitch-noqt-$(uname -m | sed 's/aarch64/arm64/; s/x86_64/amd64/'):latest > $DOCKER_LOGFILE 2>&1 &
+  --privileged ghcr.io/openuc2/imswitch-noqt:latest > $DOCKER_LOGFILE 2>&1 &
 
 echo "Startup script completed"
 EOSH

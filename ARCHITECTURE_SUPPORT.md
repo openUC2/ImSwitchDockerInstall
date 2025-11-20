@@ -20,9 +20,8 @@ This maps:
 
 ## Docker Images
 
-The following Docker images are used:
-- ARM64: `ghcr.io/openuc2/imswitch-noqt-arm64:latest`
-- AMD64: `ghcr.io/openuc2/imswitch-noqt-amd64:latest`
+The following Docker image is used:
+- Universal: `ghcr.io/openuc2/imswitch-noqt:latest`
 
 ## Camera Drivers
 
@@ -62,7 +61,7 @@ ARCH=$(uname -m | sed 's/aarch64/arm64/; s/x86_64/amd64/') docker-compose up -d
 ARCH=$(uname -m | sed 's/aarch64/arm64/; s/x86_64/amd64/')
 sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -p 8888:8888 \
   -e HEADLESS=1 -e HTTP_PORT=8001 \
-  --privileged ghcr.io/openuc2/imswitch-noqt-$ARCH:latest
+  --privileged ghcr.io/openuc2/imswitch-noqt:latest
 ```
 
 ### HIK Driver Installation

@@ -9,7 +9,7 @@ mkdir -p "$DESKTOP_PATH"
 echo "#!/bin/bash
 # Pull the latest version of the docker container
 ARCH=\$(uname -m | sed 's/aarch64/arm64/; s/x86_64/amd64/')
-docker pull ghcr.io/openuc2/imswitch-noqt-\$ARCH:latest
+docker pull ghcr.io/openuc2/imswitch-noqt:latest
 " >"$DESKTOP_PATH/update_docker_container.sh"
 
 # Make the update script executable
@@ -30,7 +30,7 @@ sudo docker run -it --rm -p 8001:8001 -p 8002:8002 -p 8003:8003 -p 8888:8888 -p 
 -e HTTP_PORT=8001 \
 -e UPDATE_INSTALL_GIT=0 \
 -e UPDATE_CONFIG=0 \
---privileged ghcr.io/openuc2/imswitch-noqt-\$(uname -m | sed 's/aarch64/arm64/; s/x86_64/amd64/'):latest
+--privileged ghcr.io/openuc2/imswitch-noqt:latest
 " >"$DESKTOP_PATH/launch_docker_container.sh"
 
 # Make the launch script executable

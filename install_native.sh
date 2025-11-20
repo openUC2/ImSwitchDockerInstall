@@ -25,7 +25,8 @@ sudo apt-get update && sudo apt-get install -y \
     mesa-utils \
     openssh-server \
     libhdf5-dev \
-    usbutils
+    usbutils \
+    python3-picamera2
 
 # Clean up apt caches
 sudo apt-get clean
@@ -63,6 +64,13 @@ echo "Installing UC2-REST"
 git clone https://github.com/openUC2/UC2-REST ~/UC2-REST
 cd ~/UC2-REST
 source /opt/conda/bin/activate imswitch311 && pip install -e ~/UC2-REST
+
+/bin/bash -c "source /opt/conda/bin/activate imswitch311 && \
+    CONDA_SITE_PACKAGES=\$(python -c 'import site; print(site.getsitepackages()[0])') && \
+    echo '/usr/lib/python3/dist-packages' > \$CONDA_SITE_PACKAGES/system-packages.pth && \
+    python -c 'import sys; print(\"Python paths:\"); [print(p) for p in sys.path]'"
+source /opt/conda/bin/activate imswitch311 && pip install simplejpeg --force-reinstall --user
+
 
 # we want psygnal to be installed without binaries - so first remove it - raspi doesn't need this one
 # source /opt/conda/bin/activate imswitch && pip uninstall psygnal -y
