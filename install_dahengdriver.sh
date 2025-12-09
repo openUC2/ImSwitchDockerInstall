@@ -6,7 +6,9 @@ sudo apt-get install -y python3 python3-pip
 # Create the udev rules directory
 mkdir -p /etc/udev/rules.d
 
-sudo mv /usr/lib/python3.11/EXTERNALLY-MANAGED /usr/lib/python3.11/EXTERNALLY-MANAGED.old
+for file in /usr/lib/python*/EXTERNALLY-MANAGED; do
+    sudo mv "$file" "$file.old"
+done
 
 # Download and install the appropriate Daheng driver based on architecture
 cd /tmp

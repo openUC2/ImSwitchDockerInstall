@@ -13,7 +13,9 @@ chmod +x install_docker_raspi.sh
 
 
 mkdir -p /etc/udev/rules.d
-sudo mv /usr/lib/python3.11/EXTERNALLY-MANAGED /usr/lib/python3.11/EXTERNALLY-MANAGED.old
+for file in /usr/lib/python*/EXTERNALLY-MANAGED; do
+    sudo mv "$file" "$file.old"
+done
 
 # Download and install the appropriate Hik/daheng driver based on architecture
 cd /tmp
