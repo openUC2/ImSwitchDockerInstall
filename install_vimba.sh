@@ -34,3 +34,4 @@ sudo bash -c 'echo "export GENICAM_GENTL64_PATH=/opt/VimbaX/cti" > /etc/profile.
 
 # Add to current session
 export GENICAM_GENTL64_PATH="/opt/VimbaX/cti"
+pip install https://github.com/alliedvision/VmbPy/releases/download/1.2.1_beta1/vmbpy-1.2.1-py3-none-manylinux_2_27_aarch64.whl
