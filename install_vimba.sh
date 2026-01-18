@@ -18,7 +18,7 @@ VIMBA_DIR="/opt/VimbaX"
 
 echo "Downloading VimbaX SDK..."
 cd /tmp
-wget https://downloads.alliedvision.com/VimbaX/VimbaX_Setup-2025-1-Linux_ARM64.tar.gz 
+wget https://github.com/openUC2/ImSwitchDockerInstall/releases/download/imswitch-master/VimbaX_Setup-2025-1-Linux_ARM64.tar.gz
 
 echo "Extracting VimbaX SDK..."
 sudo tar -xzf VimbaX_Setup-2025-1-Linux_ARM64.tar.gz -C ${INSTALL_DIR}
