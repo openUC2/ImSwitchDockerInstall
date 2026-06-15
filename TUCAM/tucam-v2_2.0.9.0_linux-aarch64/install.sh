@@ -230,6 +230,8 @@ log "Examples:  ${DESTDIR}/${EXAMPLES_REL}/"
 # 1. make executable in ROOT 
 chmod +x "${ROOT}/tucam-v2_2.0.9.0_linux-aarch64.deb"
 # 2. copy to /tmp
+log "Installing ${ROOT}/tucam-v2_2.0.9.0_linux-aarch64.deb via dpkg"
 cp "${ROOT}/tucam-v2_2.0.9.0_linux-aarch64.deb" /tmp/   
 sudo dpkg -i /tmp/tucam-v2_2.0.9.0_linux-aarch64.deb
 rm -f /tmp/tucam-v2_2.0.9.0_linux-aarch64.deb
+log "Done installing ${ROOT}/tucam-v2_2.0.9.0_linux-aarch64.deb"
