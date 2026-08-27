@@ -25,7 +25,7 @@ shopt -s nullglob
 
 KIOSK_USER="${KIOSK_USER:-pi}"
 PORT="${PORT:-80}"
-SCALE="${SCALE:-0.7}"
+SCALE="${SCALE:-1.0}"
 ROTATE="${ROTATE:-auto}"
 TARGET_URL="${TARGET_URL:-http://127.0.0.1:${PORT}/}"
 PING_URL="${PING_URL:-${TARGET_URL}}"
@@ -96,6 +96,7 @@ do_uninstall() {
   systemctl stop kiosk.service 2>/dev/null || true
   systemctl disable kiosk.service 2>/dev/null || true
   rm -f "$UNIT_FILE" "$PREPARE_SH" "$SESSION_SH" "$KIOSKCTL" "$XORG_CONF" "$DISABLE_FLAG" "$BOOT_DISABLE_FLAG"
+  rm -f /etc/X11/xorg.conf.d/99-kiosk-touch.conf
   rm -rf "$SHARE_DIR" "$STATE_DIR"
   systemctl daemon-reload
   systemctl unmask getty@tty1.service 2>/dev/null || true
@@ -251,6 +252,77 @@ fi
 [[ -n "$KMSDEV" ]] || { log "no display-capable DRM device found"; exit 1; }
 log "using $KMSDEV"
 
+# Which connector actually carries the picture -- needed for the panel geometry.
+CONN=""
+for _d in /sys/class/drm/card*-*; do
+  [[ -f "$_d/status" ]] || continue
+  case "$(basename "$_d")" in *Writeback*) continue;; esac
+  if [[ "$(cat "$_d/status" 2>/dev/null)" == "connected" ]]; then CONN="$_d"; break; fi
+done
+
+# ------------------------------------------------------------- touch panel
+# The touch controller of the Touch Display 2 sits on the panel's I2C bus and
+# only answers once the panel itself is powered. At boot the kernel frequently
+# probes it first and it fails with -EREMOTEIO ("I2C communication failure:
+# -121"); as that is not -EPROBE_DEFER the kernel never retries, so the
+# touchscreen is simply absent -- no event node, no X device, no touch at all.
+# We run after the panel is confirmed connected, so binding here succeeds.
+rebind_touch() {
+  local drv dev name
+  for drv in /sys/bus/i2c/drivers/Goodix-TS /sys/bus/i2c/drivers/edt_ft5x06 \
+             /sys/bus/i2c/drivers/ilitek_ts_i2c; do
+    [[ -w "$drv/bind" ]] || continue
+    for dev in /sys/bus/i2c/devices/*; do
+      if [[ -e "$dev/driver" ]]; then continue; fi   # already bound
+      name="$(cat "$dev/name" 2>/dev/null || true)"
+      case "$name" in
+        gt911|gt9271|GDIX*|ft5406|ft5x06|edt-ft5x06|ili251x|ILI*) ;;
+        *) continue ;;
+      esac
+      if echo "${dev##*/}" > "$drv/bind" 2>/dev/null; then
+        log "rebound touch controller ${dev##*/} ($name) -> ${drv##*/}"
+      fi
+    done
+  done
+  return 0
+}
+for _ in 1 2 3; do
+  rebind_touch
+  if grep -qi 'touchscreen' /proc/bus/input/devices 2>/dev/null; then break; fi
+  sleep 1
+done
+
+# --------------------------------------------------------- touch rotation
+# Applied by the X server itself when the device is added, so a touchscreen
+# that only appears later (a slow probe, or the rebind above) still gets the
+# correct mapping. The session script additionally sets it through xinput for
+# devices that are already present.
+TOUCH_CONF="/etc/X11/xorg.conf.d/99-kiosk-touch.conf"
+ROT="${ROTATE:-auto}"
+if [[ "$ROT" == "auto" ]]; then
+  ROT="normal"
+  if [[ -n "$CONN" ]]; then
+    _mode="$(head -n1 "$CONN/modes" 2>/dev/null || true)"
+    _w="${_mode%x*}"; _h="${_mode#*x}"
+    if [[ "$_w" =~ ^[0-9]+$ && "$_h" =~ ^[0-9]+$ && "$_h" -gt "$_w" ]]; then ROT="right"; fi
+  fi
+fi
+case "$ROT" in
+  right)    MTX="0 1 0 -1 0 1 0 0 1" ;;
+  left)     MTX="0 -1 1 1 0 0 0 0 1" ;;
+  inverted) MTX="-1 0 1 0 -1 1 0 0 1" ;;
+  *)        MTX="1 0 0 0 1 0 0 0 1" ;;
+esac
+log "touch rotation: $ROT (panel ${_mode:-?}, connector $(basename "${CONN:-none}"))"
+cat >"$TOUCH_CONF" <<TEOF
+Section "InputClass"
+  Identifier "kiosk touch rotation"
+  MatchIsTouchscreen "on"
+  MatchDevicePath "/dev/input/event*"
+  Option "TransformationMatrix" "${MTX}"
+EndSection
+TEOF
+
 cat >"$XORG_CONF" <<XEOF
 Section "Device"
   Identifier "KMS"
@@ -347,14 +419,36 @@ apply_rotation() {
     inverted) m="-1 0 1 0 -1 1 0 0 1" ;;
     *) return 0 ;;
   esac
-  # Remap touch coordinates on every touchscreen-looking pointer.
+  # Remap touch coordinates onto the rotated screen.
+  #
+  # Match by device ID, never by name: a touch panel can register as both a
+  # pointer and a keyboard (the Goodix panel of the Touch Display 2 does), and
+  # `xinput set-prop <name>` then refuses to act on the ambiguous name. Pick
+  # touchscreens out by the "libinput Calibration Matrix" property rather than
+  # grepping names, so no controller has to be known up front.
+  #
+  # Runs in the background: the panel is frequently not registered with X yet
+  # when the session starts, and waiting for it must not delay the browser.
   command -v xinput >/dev/null 2>&1 || return 0
-  local dev
-  while IFS= read -r dev; do
-    [[ -n "$dev" ]] || continue
-    xinput set-prop "$dev" "Coordinate Transformation Matrix" $m 2>/dev/null \
-      && log "touch matrix applied to '$dev'"
-  done < <(xinput list --name-only 2>/dev/null | grep -iE 'touch|ft5406|ft5x06|goodix|ili98|edt|hid.*digitizer' || true)
+  ( id=""; n=0
+    for _ in $(seq 1 60); do
+      n=0
+      while IFS= read -r id; do
+        [[ -n "$id" ]] || continue
+        xinput list-props "$id" 2>/dev/null | grep -q 'libinput Calibration Matrix' || continue
+        n=$((n+1))
+        if xinput set-prop "$id" "Coordinate Transformation Matrix" $m; then
+          log "touch matrix ($rot) applied to id=$id '$(xinput list --name-only "$id" 2>/dev/null)'"
+        else
+          log "WARNING: failed to set touch matrix on id=$id"
+        fi
+      done < <(xinput list 2>/dev/null | sed -n 's/.*id=\([0-9]\+\)[[:space:]]*\[slave *pointer.*/\1/p')
+      [[ "$n" -gt 0 ]] && break
+      sleep 0.5
+    done
+    [[ "$n" -eq 0 ]] && log "no touchscreen found -- touch matrix not applied"
+    true
+  ) &
 }
 apply_rotation
 
