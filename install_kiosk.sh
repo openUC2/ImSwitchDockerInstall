@@ -27,7 +27,7 @@ KIOSK_USER="${KIOSK_USER:-pi}"
 PORT="${PORT:-80}"
 SCALE="${SCALE:-1.0}"
 ROTATE="${ROTATE:-auto}"
-TARGET_URL="${TARGET_URL:-http://127.0.0.1:${PORT}/}"
+TARGET_URL="${TARGET_URL:-http://127.0.0.1:${PORT}/imswitch/ui/index.html#/mobile}"
 PING_URL="${PING_URL:-${TARGET_URL}}"
 
 UNIT_FILE="/etc/systemd/system/kiosk.service"
